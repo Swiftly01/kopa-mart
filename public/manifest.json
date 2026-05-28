@@ -1,0 +1,24 @@
+{
+  "name": "Kopa Marketplace",
+  "short_name": "Kopa",
+  "description": "Buy & sell easily as a corper. Trusted marketplace for NYSC corps members.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a7a3a",
+  "theme_color": "#1a7a3a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
