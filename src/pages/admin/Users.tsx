@@ -180,7 +180,7 @@ const UsersPage = () => {
           </div>
         ) : (
           <div
-            className={`overflow-hidden border rounded-lg border-border bg-card transition-opacity ${
+            className={`overflow-scroll border rounded-lg border-border bg-card transition-opacity ${
               isFetching ? "opacity-60" : "opacity-100"
             }`}
           >

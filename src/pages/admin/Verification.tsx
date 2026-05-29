@@ -17,7 +17,6 @@ import { formatDistanceToNow } from "date-fns";
 import Pagination from "@/components/ui/pagintion";
 import { STATUS_LABELS, STATUS_STYLES } from "@/constant/sellerVerification";
 
-
 interface PendingVerification {
   userId: string;
   email: string;
@@ -131,7 +130,7 @@ const Verification = () => {
 
         {/* Tabs */}
         <div className="border-b border-border">
-          <nav className="flex gap-1 -mb-px">
+          <nav className="flex gap-1 -mb-px flex-wrap">
             {STATUS_TABS.map((tab) => {
               const isActive = activeTab === tab.value;
               return (
@@ -187,7 +186,7 @@ const Verification = () => {
           </div>
         ) : (
           <div
-            className={`overflow-hidden border rounded-lg border-border bg-card transition-opacity ${
+            className={`overflow-scroll border rounded-lg border-border bg-card transition-opacity ${
               isFetching ? "opacity-60" : "opacity-100"
             }`}
           >

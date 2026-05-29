@@ -142,7 +142,7 @@ const UserDetailPage = () => {
 
         {/* Profile card */}
         <div className="border rounded-lg border-border bg-card p-6">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-start gap-4 flex-1">
               <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shrink-0">
                 <span className="text-2xl font-bold text-primary">

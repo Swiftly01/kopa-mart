@@ -121,7 +121,7 @@ const CategoryDetailPage = () => {
 
         {/* Hero card */}
         <div className="card-listing rounded-xl p-5 flex items-start justify-between gap-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <div className="size-14 rounded-2xl bg-secondary flex items-center justify-center text-3xl shrink-0">
               {category.icon}
             </div>
@@ -154,7 +154,7 @@ const CategoryDetailPage = () => {
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
             <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
               <ArrowLeft className="size-4 mr-1.5" />
               Back
