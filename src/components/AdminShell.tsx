@@ -39,6 +39,7 @@ export const AdminShell = ({ children }: { children: ReactNode }) => {
     { to: "/admin/users", label: "Users", icon: Users },
     { to: "/admin/listings", label: "Listings", icon: Package },
     { to: "/admin/seller-verification", label: "Verify", icon: ShieldCheck },
+    { to: "/admin/categories", label: "Categories", icon: ShieldCheck },
     ...(isAdmin(user)
       ? [{ to: "/admin/settings", label: "Settings", icon: Cog }]
       : []),

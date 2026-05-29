@@ -35,6 +35,9 @@ import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import AuthSuccess from "./pages/AuthSucces.tsx";
 import VerificationDetailPage from "./pages/admin/VerificationDetailPage.tsx";
 import UserDetailPage from "./pages/admin/UserDetailPage.tsx";
+import CategoryListPage from "./pages/admin/CategoryListPage.tsx";
+import CategoryDetailPage from "./pages/admin/CategoryDetailPage..tsx";
+import CategoryForm from "./pages/admin/CategoryForm.tsx";
 
 const queryClient = new QueryClient();
 
@@ -112,6 +115,9 @@ const App = () => (
                   element={<AdminVerify />}
                 />
                 <Route path="/admin/settings" element={<AdminSettings />} />
+                <Route path="/admin/categories/new" element={<CategoryForm/>} />
+                <Route path="/admin/categories" element={<CategoryListPage/>} />
+                <Route path="/admin/categories/:id" element={<CategoryDetailPage/>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
