@@ -174,7 +174,7 @@ const Profile = () => {
           </div>
         </div>
       )}
-
+*/}
       {user.status === "verified" && (
         <Link
           to="/seller-dashboard/manage-listings"
@@ -192,7 +192,7 @@ const Profile = () => {
         </Link>
       )}
 
-      {user.status === "verified" && (
+      {user.role === "seller" && (
         <Link
           to={`/seller/${user.id}`}
           className="flex items-center gap-3 p-4 card-listing"
@@ -207,7 +207,7 @@ const Profile = () => {
         </Link>
       )}
 
-      {user.status === "verified" && (
+      {user.role === "seller" && (
         <Link
           to="/seller-dashboard/create-listing"
           className="flex items-center gap-3 p-4 card-listing"
@@ -223,7 +223,7 @@ const Profile = () => {
           </div>
         </Link>
       )}
-*/}
+
       {user.role === "buyer" ||
         (user.role === "admin" && (
           <Link

@@ -1,19 +1,25 @@
 import { ReactNode } from "react";
 import { Link, useLocation, Navigate } from "react-router-dom";
 import { useCurrentUser } from "@/store/useStore";
-import { LayoutDashboard, Plus } from "lucide-react";
+import { LayoutDashboard, Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
+import useUser from "@/hooks/users/queries/useUser";
+import SignInPrompt from "./SignInPrompt";
 
 export const SellerShell = ({ children }: { children: ReactNode }) => {
-  const user = useCurrentUser();
+  // const user = useCurrentUser();
+  const { data: user, isLoading } = useUser();
   const { pathname } = useLocation();
 
-  if (!user)
-    return (
-      <Navigate to="/login?next=/seller-dashboard/manage-listings" replace />
-    );
-  if (user.status !== "verified") {
+  if (isLoading) {
+    return <Loader2 className="mx-auto size-12 animate-spin text-primary" />;
+  }
+
+  if (!user) {
+    return <SignInPrompt />;
+  }
+  if (user.role !== "seller") {
     return (
       <div className="max-w-md mx-auto px-6 pt-16 text-center space-y-3">
         <h1 className="font-bold text-lg">Verification required</h1>

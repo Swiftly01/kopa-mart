@@ -38,6 +38,7 @@ import UserDetailPage from "./pages/admin/UserDetailPage.tsx";
 import CategoryListPage from "./pages/admin/CategoryListPage.tsx";
 import CategoryDetailPage from "./pages/admin/CategoryDetailPage..tsx";
 import CategoryForm from "./pages/admin/CategoryForm.tsx";
+import ProductDetailPage from "./pages/seller-dashboard/ProductDetailPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -51,9 +52,7 @@ const App = () => (
           <AppLayout>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/listings" element={<Listings />} />
-              <Route path="/listing/:id" element={<ListingDetail />} />
-              <Route path="/seller/:id" element={<SellerProfile />} />
+
               <Route path="/saved" element={<Saved />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
@@ -97,8 +96,15 @@ const App = () => (
                   path="/seller-dashboard/edit-listing/:id"
                   element={<CreateListing />}
                 />
+                <Route
+                  path="/seller-dashboard/listing/:id"
+                  element={<ProductDetailPage />}
+                />
 
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/listings" element={<Listings />} />
+                <Route path="/listing/:id" element={<ListingDetail />} />
+                <Route path="/seller/:id" element={<SellerProfile />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route
                   path="/admin/seller-verification/:userId"
@@ -115,9 +121,18 @@ const App = () => (
                   element={<AdminVerify />}
                 />
                 <Route path="/admin/settings" element={<AdminSettings />} />
-                <Route path="/admin/categories/new" element={<CategoryForm/>} />
-                <Route path="/admin/categories" element={<CategoryListPage/>} />
-                <Route path="/admin/categories/:id" element={<CategoryDetailPage/>} />
+                <Route
+                  path="/admin/categories/new"
+                  element={<CategoryForm />}
+                />
+                <Route
+                  path="/admin/categories"
+                  element={<CategoryListPage />}
+                />
+                <Route
+                  path="/admin/categories/:id"
+                  element={<CategoryDetailPage />}
+                />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
