@@ -1,14 +1,4 @@
-/**
- * ProductDetailPage.tsx
- *
- * Full-page product detail view for seller dashboard.
- * Includes image gallery, all product metadata, and a
- * delete confirmation modal wired to react-query mutations.
- *
- * Dependencies: react-query, lucide-react, react-router-dom, tailwindcss
- * Drop-in replacements for your existing formatNaira, conditionConfig,
- * statusConfig, and Product type imports.
- */
+
 
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -56,6 +46,7 @@ export default function ProductDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const { data: product, isLoading, isError, error } = useGetProduct(id);
+  
 
   const deleteMutation = useDeleteProduct();
   function handleDelete() {

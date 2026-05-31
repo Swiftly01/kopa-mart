@@ -1,93 +1,73 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react";
-import { useStore, useCurrentUser } from "@/store/useStore";
-import { ListingCard } from "@/components/ListingCard";
+import { Loader2, Search, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
 import heroImg from "@/assets/hero.jpg";
 import nyscLogo from "@/assets/kopa_logo.jpeg";
-import { useIsMobile } from "@/hooks/use-mobile";
 import useUser from "@/hooks/users/queries/useUser";
-import { useAuth } from "@/context/AuthContext";
+import useGetProductsInfinite from "@/hooks/products/queries/useGetProductsInfinite";
+import { useProductFilters } from "@/hooks/products/custom/useproductfilters";
+import { FilterControls } from "@/components/ui/filterControls";
+import { ProductGrid } from "@/components/ui/productGrid";
+
+const ITEMS_PER_PAGE = 1;
 
 const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const listings = useStore((s) => s.listings);
-  const pinned = useStore((s) => s.pinned);
-  const categories = useStore((s) => s.categories);
-  const states = useStore((s) => s.states);
-  const lgas = useStore((s) => s.lgas);
-  //const user = useCurrentUser();
-  const [q, setQ] = useState("");
-  const [selCat, setSelCat] = useState("");
-  const [selState, setSelState] = useState("");
-  const [selLga, setSelLga] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
-  const allLgas = useMemo(() => {
-    if (selState) return lgas[selState] ?? [];
-    return states.flatMap((s) => lgas[s] ?? []);
-  }, [states, lgas, selState]);
+  const {
+    register,
+    watchedState,
+    watchedLga,
+    watchedCategory,
+    watchedQ,
+    debouncedQ,
+    handleQChange,
+    handleStateChange,
+    handleLgaChange,
+    handleCategoryChange,
+    clearFilters,
+    activeFilters,
+    states,
+    lgas,
+    categories,
+    isLoadingCategories,
+    queryParams,
+  } = useProductFilters();
 
-  const ordered = useMemo(() => {
-    const pinnedSet = new Set(pinned);
-    const pinnedItems = pinned
-      .map((id) => listings.find((l) => l.id === id))
-      .filter(Boolean) as typeof listings;
-    const rest = [...listings]
-      .filter((l) => !pinnedSet.has(l.id))
-      .sort((a, b) => b.createdAt - a.createdAt);
-    return [...pinnedItems, ...rest];
-  }, [listings, pinned]);
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useGetProductsInfinite({ limit: ITEMS_PER_PAGE, ...queryParams });
 
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    return ordered
-      .filter(
-        (l) =>
-          (!term ||
-            l.title.toLowerCase().includes(term) ||
-            l.location.toLowerCase().includes(term) ||
-            l.category.toLowerCase().includes(term)) &&
-          (!selCat || l.category === selCat) &&
-          (!selLga || l.location === selLga),
-      )
-      .slice(0, 50);
-  }, [ordered, q, selCat, selLga]);
+  const products = useMemo(
+    () => data?.pages.flatMap((p) => p.data) ?? [],
+    [data],
+  );
+  const totalCount = data?.pages[0]?.meta.totalItems ?? 0;
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const p = new URLSearchParams();
-    if (q) p.set("q", q);
-    if (selCat) p.set("category", selCat);
-    if (selLga) p.set("location", selLga);
-    navigate(`/listings?${p.toString()}`);
-  };
+  // Infinite scroll sentinel
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const activeFilters =
-    (selCat ? 1 : 0) + (selLga ? 1 : 0) + (selState ? 1 : 0);
-
-  // Alternating scroll animation directions
-  const getAnimDirection = (i: number) => {
-    const dirs = [
-      "translate-y-8",
-      "-translate-x-8",
-      "translate-y-8",
-      "translate-x-8",
-    ];
-    return dirs[i % 4];
-  };
-
+  // Card entrance animations
   const gridRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    if (!gridRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -96,16 +76,17 @@ const Index = () => {
             el.classList.add("opacity-100");
             el.classList.remove("opacity-0");
             el.style.transform = "translate(0, 0)";
+            observer.unobserve(el);
           }
         });
       },
       { threshold: 0.05, rootMargin: "50px" },
     );
-    const cards = gridRef.current?.querySelectorAll(".listing-animate");
-    cards?.forEach((card, index) => {
+    const cards = gridRef.current.querySelectorAll(
+      ".listing-animate.opacity-0",
+    );
+    cards.forEach((card, index) => {
       const el = card as HTMLElement;
-      el.classList.add("opacity-0");
-      el.classList.remove("opacity-100");
       el.style.transform =
         index % 4 === 0
           ? "translateY(2rem)"
@@ -114,110 +95,52 @@ const Index = () => {
             : index % 4 === 2
               ? "translateY(2rem)"
               : "translateX(2rem)";
+      observer.observe(el);
     });
-    cards?.forEach((c) => observer.observe(c));
     return () => observer.disconnect();
-  }, [filtered, isMobile]);
+  }, [products]);
 
-  const filterSection = (
-    <div className="space-y-2">
-      <Select
-        value={selState}
-        onValueChange={(v) => {
-          setSelState(v === "__all__" ? "" : v);
-          setSelLga("");
-        }}
-      >
-        <SelectTrigger className="h-9 text-xs rounded-full bg-secondary border-0">
-          <SelectValue placeholder="State" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__all__">All States</SelectItem>
-          {states.map((s) => (
-            <SelectItem key={s} value={s}>
-              {s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select
-        value={selLga}
-        onValueChange={(v) => setSelLga(v === "__all__" ? "" : v)}
-      >
-        <SelectTrigger className="h-9 text-xs rounded-full bg-secondary border-0">
-          <SelectValue placeholder="Location" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__all__">All Locations</SelectItem>
-          {allLgas.map((l) => (
-            <SelectItem key={l} value={l}>
-              {l}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select
-        value={selCat}
-        onValueChange={(v) => setSelCat(v === "__all__" ? "" : v)}
-      >
-        <SelectTrigger className="h-9 text-xs rounded-full bg-secondary border-0">
-          <SelectValue placeholder="Category" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__all__">All Categories</SelectItem>
-          {categories.map((c) => (
-            <SelectItem key={c.name} value={c.name}>
-              {c.emoji} {c.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {activeFilters > 0 && (
-        <button
-          onClick={() => {
-            setSelCat("");
-            setSelLga("");
-            setSelState("");
-          }}
-          className="text-[11px] text-primary font-medium flex items-center gap-1"
-        >
-          <X className="size-3" />
-          Clear filters
-        </button>
-      )}
-    </div>
-  );
+  const { data: user } = useUser();
 
-  const { data: user, isLoading } = useUser();
+  const onSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate(`/listings?q=${encodeURIComponent(watchedQ)}`);
+  };
 
   return (
     <div>
-      {/* Sticky search header */}
+      {/* ── Sticky header ── */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link to="/" className="shrink-0 flex items-center gap-2">
             <img
               src={nyscLogo}
-              alt="NYSC logo"
+              alt="Kopa logo"
               width={36}
               height={36}
               className="size-9 rounded-lg object-cover ring-1 ring-border"
             />
           </Link>
-          <form onSubmit={submit} className="relative flex-1">
+
+          <form onSubmit={onSearchSubmit} className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
+              {...register("q")}
+              onChange={(e) => handleQChange(e.target.value)}
               placeholder="Search products, services..."
               className="pl-10 h-11 rounded-2xl bg-secondary border-0"
             />
           </form>
-          {/* Filter toggle button (mobile) */}
+
           {isMobile && (
             <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`shrink-0 size-11 rounded-2xl flex items-center justify-center transition-colors ${showFilters || activeFilters > 0 ? "bg-primary text-primary-foreground" : "bg-secondary"}`}
+              type="button"
+              onClick={() => setShowFilters((v) => !v)}
+              className={`relative shrink-0 size-11 rounded-2xl flex items-center justify-center transition-colors ${
+                showFilters || activeFilters > 0
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary"
+              }`}
             >
               <SlidersHorizontal className="size-4" />
               {activeFilters > 0 && !showFilters && (
@@ -227,6 +150,7 @@ const Index = () => {
               )}
             </button>
           )}
+
           {!user ? (
             <Link
               to="/login"
@@ -246,91 +170,32 @@ const Index = () => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                user.firstName?.toUpperCase()
+                user.firstName?.charAt(0).toUpperCase()
               )}
             </Link>
           )}
         </div>
-        {/* Mobile filter dropdown */}
+
         {isMobile && showFilters && (
           <div className="max-w-7xl mx-auto px-4 pb-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Select
-                value={selState}
-                onValueChange={(v) => {
-                  setSelState(v === "__all__" ? "" : v);
-                  setSelLga("");
-                }}
-              >
-                <SelectTrigger className="h-8 w-[120px] text-xs rounded-full bg-secondary border-0">
-                  <SelectValue placeholder="State" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">All States</SelectItem>
-                  {states.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={selLga}
-                onValueChange={(v) => setSelLga(v === "__all__" ? "" : v)}
-              >
-                <SelectTrigger className="h-8 w-[130px] text-xs rounded-full bg-secondary border-0">
-                  <SelectValue placeholder="Location" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">All Locations</SelectItem>
-                  {allLgas.map((l) => (
-                    <SelectItem key={l} value={l}>
-                      {l}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={selCat}
-                onValueChange={(v) => setSelCat(v === "__all__" ? "" : v)}
-              >
-                <SelectTrigger className="h-8 w-[140px] text-xs rounded-full bg-secondary border-0">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">All Categories</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.name} value={c.name}>
-                      {c.emoji} {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {activeFilters > 0 && (
-                <button
-                  onClick={() => {
-                    setSelCat("");
-                    setSelLga("");
-                    setSelState("");
-                  }}
-                  className="text-[11px] text-primary font-medium flex items-center gap-1"
-                >
-                  <X className="size-3" />
-                  Clear
-                </button>
-              )}
-            </div>
+            <FilterControls
+              compact
+              watchedState={watchedState}
+              watchedLga={watchedLga}
+              watchedCategory={watchedCategory}
+              states={states}
+              lgas={lgas}
+              categories={categories}
+              onStateChange={handleStateChange}
+              onLgaChange={handleLgaChange}
+              onCategoryChange={handleCategoryChange}
+              onClearFilters={clearFilters}
+              activeFilters={activeFilters}
+            />
           </div>
         )}
-        {/* Desktop: "Supporting the youth" */}
-        {!isMobile && (
-          <div className="max-w-7xl mx-auto px-4 pb-2">
-            <p className="text-[11px] text-muted-foreground">
-              Supporting the youth
-            </p>
-          </div>
-        )}
-        {isMobile && !showFilters && (
+
+        {(!isMobile || !showFilters) && (
           <div className="max-w-7xl mx-auto px-4 pb-2">
             <p className="text-[11px] text-muted-foreground">
               Supporting the youth
@@ -340,7 +205,7 @@ const Index = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 pt-4 space-y-6">
-        {/* Hero */}
+        {/* ── Hero ── */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-hero text-primary-foreground shadow-elevated">
           <div className="flex items-center">
             <div className="relative z-10 p-5 flex-1 max-w-[60%] md:max-w-[50%]">
@@ -348,9 +213,10 @@ const Index = () => {
                 Trusted by Corpers 🇳🇬
               </p>
               <h1 className="text-xl md:text-2xl font-bold leading-tight mb-3">
-                Buy & Sell Easily as a Corper
+                Buy &amp; Sell Easily as a Corper
               </h1>
               <button
+                type="button"
                 onClick={() => navigate("/seller-onboarding/intro")}
                 className="bg-background text-foreground text-sm font-semibold px-4 py-2 rounded-full shadow-soft hover:shadow-elevated transition-shadow"
               >
@@ -367,7 +233,7 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Categories */}
+        {/* ── Categories ── */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold">Categories</h2>
@@ -376,47 +242,55 @@ const Index = () => {
             </Link>
           </div>
           {isMobile ? (
-            /* Mobile: auto-scrolling marquee */
             <div className="overflow-hidden relative">
               <div className="flex gap-3 animate-marquee">
-                {[...categories, ...categories].map((c, i) => (
+                {isLoadingCategories ? (
+                  <Loader2 className="mx-auto size-12 animate-spin text-primary" />
+                ) : (
+                  [...categories, ...categories].map(
+                    (c: { name: string; icon: string }, i: number) => (
+                      <Link
+                        key={`${c.name}-${i}`}
+                        to={`/listings?category=${encodeURIComponent(c.name)}`}
+                        className="flex flex-col items-center gap-2 w-[72px] shrink-0"
+                      >
+                        <div className="size-16 rounded-2xl bg-secondary flex items-center justify-center text-2xl">
+                          {c.icon}
+                        </div>
+                        <span className="text-[11px] text-center leading-tight">
+                          {c.name}
+                        </span>
+                      </Link>
+                    ),
+                  )
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {isLoadingCategories ? (
+                <Loader2 className="mx-auto size-12 animate-spin text-primary" />
+              ) : (
+                categories.map((c: { name: string; icon: string }) => (
                   <Link
-                    key={`${c.name}-${i}`}
+                    key={c.name}
                     to={`/listings?category=${encodeURIComponent(c.name)}`}
-                    className="flex flex-col items-center gap-2 w-[72px] shrink-0"
+                    className="flex flex-col items-center gap-2 w-[72px]"
                   >
-                    <div className="size-16 rounded-2xl bg-secondary flex items-center justify-center text-2xl">
-                      {c.emoji}
+                    <div className="size-16 rounded-2xl bg-secondary flex items-center justify-center text-2xl hover:scale-105 transition-transform">
+                      {c.icon}
                     </div>
                     <span className="text-[11px] text-center leading-tight">
                       {c.name}
                     </span>
                   </Link>
-                ))}
-              </div>
-            </div>
-          ) : (
-            /* Desktop: wrap into rows */
-            <div className="flex flex-wrap gap-3">
-              {categories.map((c) => (
-                <Link
-                  key={c.name}
-                  to={`/listings?category=${encodeURIComponent(c.name)}`}
-                  className="flex flex-col items-center gap-2 w-[72px]"
-                >
-                  <div className="size-16 rounded-2xl bg-secondary flex items-center justify-center text-2xl hover:scale-105 transition-transform">
-                    {c.emoji}
-                  </div>
-                  <span className="text-[11px] text-center leading-tight">
-                    {c.name}
-                  </span>
-                </Link>
-              ))}
+                ))
+              )}
             </div>
           )}
         </section>
 
-        {/* Safety banner */}
+        {/* ── Safety tip ── */}
         <div className="flex items-start gap-3 p-3 rounded-xl bg-warning/10 border border-warning/20">
           <ShieldCheck className="size-5 text-warning shrink-0 mt-0.5" />
           <p className="text-xs text-foreground/80">
@@ -425,10 +299,19 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Desktop: sidebar filters + grid | Mobile: just grid */}
+        {/* ── Latest listings ── */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold">Latest listings</h2>
+            <div>
+              <h2 className="font-semibold">Latest listings</h2>
+              {!isLoading && totalCount > 0 && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {totalCount.toLocaleString()}{" "}
+                  {totalCount === 1 ? "listing" : "listings"}
+                  {(debouncedQ || activeFilters > 0) && " found"}
+                </p>
+              )}
+            </div>
             <Link to="/listings" className="text-xs text-primary font-medium">
               View all
             </Link>
@@ -436,64 +319,51 @@ const Index = () => {
 
           {!isMobile ? (
             <div className="flex gap-6">
-              {/* Desktop sidebar filters */}
               <aside className="w-[200px] shrink-0 space-y-3 sticky top-24 self-start">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Filters
                 </p>
-                {filterSection}
+                <FilterControls
+                  watchedState={watchedState}
+                  watchedLga={watchedLga}
+                  watchedCategory={watchedCategory}
+                  states={states}
+                  lgas={lgas}
+                  categories={categories}
+                  onStateChange={handleStateChange}
+                  onLgaChange={handleLgaChange}
+                  onCategoryChange={handleCategoryChange}
+                  onClearFilters={clearFilters}
+                  activeFilters={activeFilters}
+                />
               </aside>
+
               <div className="flex-1">
-                <div ref={gridRef} className="grid grid-cols-4 gap-3">
-                  {filtered.map((l, i) => (
-                    <div
-                      key={l.id}
-                      className={`listing-animate opacity-0 transition-all duration-700 ease-out`}
-                      style={{
-                        transform:
-                          i % 4 === 0
-                            ? "translateY(2rem)"
-                            : i % 4 === 1
-                              ? "translateX(-2rem)"
-                              : i % 4 === 2
-                                ? "translateY(2rem)"
-                                : "translateX(2rem)",
-                        transitionDelay: `${(i % 4) * 80}ms`,
-                      }}
-                    >
-                      <ListingCard listing={l} />
-                    </div>
-                  ))}
-                </div>
+                <ProductGrid
+                  products={products}
+                  isLoading={isLoading}
+                  isFetchingNextPage={isFetchingNextPage}
+                  hasNextPage={hasNextPage}
+                  activeFilters={activeFilters}
+                  onClearFilters={clearFilters}
+                  gridRef={gridRef}
+                  sentinelRef={sentinelRef}
+                  cols={4}
+                />
               </div>
             </div>
           ) : (
-            <div ref={gridRef} className="grid grid-cols-2 gap-3">
-              {filtered.map((l, i) => (
-                <div
-                  key={l.id}
-                  className={`listing-animate opacity-0 transition-all duration-700 ease-out`}
-                  style={{
-                    transform:
-                      i % 4 === 0
-                        ? "translateY(2rem)"
-                        : i % 4 === 1
-                          ? "translateX(-2rem)"
-                          : i % 4 === 2
-                            ? "translateY(2rem)"
-                            : "translateX(2rem)",
-                    transitionDelay: `${(i % 2) * 100}ms`,
-                  }}
-                >
-                  <ListingCard listing={l} />
-                </div>
-              ))}
-            </div>
-          )}
-          {filtered.length === 0 && (
-            <div className="text-center py-16 text-muted-foreground text-sm">
-              No listings match your filters.
-            </div>
+            <ProductGrid
+              products={products}
+              isLoading={isLoading}
+              isFetchingNextPage={isFetchingNextPage}
+              hasNextPage={hasNextPage}
+              activeFilters={activeFilters}
+              onClearFilters={clearFilters}
+              gridRef={gridRef}
+              sentinelRef={sentinelRef}
+              cols={2}
+            />
           )}
         </section>
 

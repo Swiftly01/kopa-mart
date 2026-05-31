@@ -66,6 +66,22 @@ export class ProductService {
     return response.data;
   }
 
+  static async getProductBySlug(slug: string): Promise<Product> {
+    const response = await apiClient.get(
+      `${apiBaseUrl}/api/v1/products/slug/${slug}`,
+    );
+    return response.data;
+  }
+
+  static async publicSellerProducts(params: ProductParams & { sellerId: string }) {
+  const { sellerId, ...rest } = params;
+  const response = await apiClient.get(
+    `${apiBaseUrl}/api/v1/products/seller/${sellerId}`,
+    { params: rest },
+  );
+  return response.data;
+}
+
   static async deleteProductImage(
     productId: string,
     imageId: string,

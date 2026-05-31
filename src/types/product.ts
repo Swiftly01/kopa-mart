@@ -1,3 +1,5 @@
+import { User } from "./user";
+
 export interface CreateProductResponse {
   success: boolean;
   message: string;
@@ -14,13 +16,12 @@ export interface CreateProductResponse {
   };
 }
 
-
 export interface ProductParams {
   page?: number;
   limit?: number;
   search?: string;
+  sellerId?: string;
 }
-
 
 export interface Product {
   id: string;
@@ -51,6 +52,7 @@ export interface Product {
 
   images: ProductImage[];
   category: Category;
+  seller?: User | null;
 }
 
 export interface ProductImage {
@@ -92,7 +94,6 @@ export interface Category {
   updatedAt: string;
 }
 
-
 export interface ProductListData {
   data: Product[];
   meta: {
@@ -124,8 +125,6 @@ export interface ProductSearchParams {
   sortBy?: string;
 }
 
-
-
 export enum ProductCondition {
   NEW = "new",
   LIKE_NEW = "like_new",
@@ -139,7 +138,6 @@ export enum SortBy {
   PRICE_DESC = "price-desc",
   POPULAR = "popular",
 }
-
 
 export interface FilterState {
   stateName: string;
