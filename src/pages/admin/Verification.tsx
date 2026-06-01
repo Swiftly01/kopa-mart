@@ -16,6 +16,7 @@ import { SellerVerificationStatusEnum } from "@/types/adminSellerVerification";
 import { formatDistanceToNow } from "date-fns";
 import Pagination from "@/components/ui/pagintion";
 import { STATUS_LABELS, STATUS_STYLES } from "@/constant/sellerVerification";
+import { ITEMS_PER_PAGE } from "@/lib/utils/config";
 
 interface PendingVerification {
   userId: string;
@@ -25,7 +26,6 @@ interface PendingVerification {
   status: SellerVerificationStatusEnum;
 }
 
-const ITEMS_PER_PAGE = 10;
 
 const STATUS_TABS: {
   label: string;

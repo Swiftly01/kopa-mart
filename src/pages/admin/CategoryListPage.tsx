@@ -27,9 +27,10 @@ import EditCategoryModal from "@/components/ui/editCategoryModal";
 import useGetCategories from "@/hooks/admin/categories/queries/useGetCategories";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Category } from "@/types/category";
+import { ITEMS_PER_PAGE } from "@/lib/utils/config";
 
 
-const ITEMS_PER_PAGE = 15;
+
 
 const STATUS_STYLES: Record<string, { pill: string; dot: string }> = {
   active: { pill: "bg-emerald-500/10 text-emerald-600", dot: "bg-emerald-500" },

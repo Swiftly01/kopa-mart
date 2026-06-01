@@ -5,10 +5,14 @@ export enum UserRoleEnum {
   SELLER = "seller",
   BUYER = "buyer",
   ADMIN = "admin",
-  SUPER_ADMIN = "super admin"
+  SUPER_ADMIN = "super admin",
 }
 
-
+export interface UpdateProfilePayload {
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+}
 
 export interface User {
   id: string;
@@ -19,7 +23,9 @@ export interface User {
   role: Role;
   isEmailVerified: boolean;
 
-  profilePicture: string | null;
+  profilePicturePublicId: string;
+  profilePictureUrl: string;
+  profilePictureThumbnailUrl: string;
 
   emailVerificationToken: string | null;
   emailVerificationTokenExpiresAt: string | null;

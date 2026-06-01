@@ -17,6 +17,7 @@ import {
   countActiveFilters,
   sortByOptions,
 } from "@/lib/productConfig";
+import { ITEMS_PER_PAGE } from "@/lib/utils/config";
 import { handleAxiosError } from "@/lib/utils/errors/errorHandler";
 import { cn } from "@/lib/utils/utils";
 import { Product, type FilterState } from "@/types/product";
@@ -36,7 +37,7 @@ import {
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
-const ITEMS_PER_PAGE = 10;
+
 
 const DEFAULT_FILTERS: FilterState = {
   stateName: "",

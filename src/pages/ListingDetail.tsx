@@ -1,6 +1,8 @@
 import { DetailSkeleton } from "@/components/detailSkeleton";
 import { Button } from "@/components/ui/button";
 import useGetProductBySlug from "@/hooks/products/queries/useGetProductBySlug";
+import { useToggleSavedProduct } from "@/hooks/saved-products/mutations/usetoggleSavedProduct";
+import { useGetSaveStatus } from "@/hooks/saved-products/queries/useGetSaveStatus";
 import { conditionStyle } from "@/lib/productConfig";
 import { cn, formatNaira, timeAgo } from "@/lib/utils/utils";
 import {
@@ -16,7 +18,7 @@ import {
   MessageCircle,
   Phone,
   Share2,
-  ShieldCheck
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -25,11 +27,12 @@ const ListingDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [activeImg, setActiveImg] = useState(0);
-  const [saved, setSaved] = useState(false);
 
   const { data: product, isLoading, isError } = useGetProductBySlug(slug);
 
-
+  const { isSaved } = useGetSaveStatus(product?.id ?? "");
+  const { mutate: toggleSave, isPending: isSavePending } =
+    useToggleSavedProduct(product?.id ?? "");
 
   if (isLoading) return <DetailSkeleton />;
 
@@ -115,17 +118,27 @@ const ListingDetail = () => {
                 No image available
               </div>
             )}
+
+            {/* ── Heart button — wired to real save API ── */}
             <button
-              onClick={() => setSaved((v) => !v)}
-              className="absolute top-3 right-14 size-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-md hover:scale-105 transition-transform"
+              type="button"
+              disabled={isSavePending}
+              onClick={() => toggleSave()}
+              className={cn(
+                "absolute top-3 right-14 size-10 rounded-full bg-white/90 backdrop-blur",
+                "flex items-center justify-center shadow-md hover:scale-105 transition-transform",
+                isSavePending && "opacity-60 cursor-not-allowed",
+              )}
+              aria-label={isSaved ? "Remove from saved" : "Save listing"}
             >
               <Heart
                 className={cn(
-                  "size-4",
-                  saved ? "fill-red-500 text-red-500" : "text-zinc-500",
+                  "size-4 transition-colors",
+                  isSaved ? "fill-red-500 text-red-500" : "text-zinc-500",
                 )}
               />
             </button>
+
             <button
               onClick={() =>
                 navigator.share?.({
@@ -257,6 +270,28 @@ const ListingDetail = () => {
               </Link>
             )}
           </div>
+
+          {/* Save CTA — visible alternative to the floating heart */}
+          <button
+            type="button"
+            disabled={isSavePending}
+            onClick={() => toggleSave()}
+            className={cn(
+              "w-full h-11 rounded-full border-2 font-semibold text-sm flex items-center justify-center gap-2 transition-all",
+              isSaved
+                ? "border-red-200 bg-red-50 text-red-500 hover:bg-red-100"
+                : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
+              isSavePending && "opacity-60 cursor-not-allowed",
+            )}
+          >
+            <Heart
+              className={cn(
+                "size-4 transition-colors",
+                isSaved && "fill-red-500 text-red-500",
+              )}
+            />
+            {isSaved ? "Saved" : "Save listing"}
+          </button>
 
           {/* Safety micro-tip */}
           <p className="flex items-center justify-center gap-1.5 text-xs text-zinc-400">

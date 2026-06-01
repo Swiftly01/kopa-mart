@@ -17,8 +17,8 @@ import { formatDistanceToNow } from "date-fns";
 import Pagination from "@/components/ui/pagintion";
 import useAllUsers from "@/hooks/admin/users/queries/useAllUsers";
 import { UserRoleEnum } from "@/types/user";
+import { ITEMS_PER_PAGE } from "@/lib/utils/config";
 
-const ITEMS_PER_PAGE = 2;
 
 const ROLE_TABS: { label: string; value: UserRoleEnum | "all" }[] = [
   { label: "Buyers",      value: UserRoleEnum.BUYER },

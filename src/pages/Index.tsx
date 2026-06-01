@@ -10,8 +10,9 @@ import useGetProductsInfinite from "@/hooks/products/queries/useGetProductsInfin
 import { useProductFilters } from "@/hooks/products/custom/useproductfilters";
 import { FilterControls } from "@/components/ui/filterControls";
 import { ProductGrid } from "@/components/ui/productGrid";
+import { ITEMS_PER_PAGE } from "@/lib/utils/config";
 
-const ITEMS_PER_PAGE = 1;
+
 
 const Index = () => {
   const navigate = useNavigate();
@@ -163,9 +164,9 @@ const Index = () => {
               to="/profile"
               className="shrink-0 size-9 rounded-full bg-secondary flex items-center justify-center text-sm font-bold text-secondary-foreground overflow-hidden"
             >
-              {user.profilePicture ? (
+              {user.profilePictureUrl ? (
                 <img
-                  src={user.profilePicture}
+                  src={user.profilePictureUrl}
                   alt=""
                   className="w-full h-full object-cover"
                 />
