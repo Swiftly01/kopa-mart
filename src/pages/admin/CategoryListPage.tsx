@@ -52,6 +52,8 @@ const CategoryListPage = () => {
     search: debouncedSearch || undefined,
   });
 
+  console.log(data);
+
   const categories = useMemo(() => data?.data ?? [], [data]);
 
   const totalCount = data?.meta?.totalItems ?? 0;

@@ -39,6 +39,7 @@ import CategoryListPage from "./pages/admin/CategoryListPage.tsx";
 import CategoryDetailPage from "./pages/admin/CategoryDetailPage..tsx";
 import CategoryForm from "./pages/admin/CategoryForm.tsx";
 import ProductDetailPage from "./pages/seller-dashboard/ProductDetailPage.tsx";
+import AdminListingDetail from "./pages/admin/AdminListingDetail.tsx";
 
 const queryClient = new QueryClient();
 
@@ -53,7 +54,6 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
 
-            
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/auth/success" element={<AuthSuccess />} />
@@ -100,7 +100,7 @@ const App = () => (
                   path="/seller-dashboard/listing/:id"
                   element={<ProductDetailPage />}
                 />
-                 <Route path="/saved" element={<Saved />} />
+                <Route path="/saved" element={<Saved />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/listings" element={<Listings />} />
                 <Route path="/listing/:slug" element={<ListingDetail />} />
@@ -116,6 +116,10 @@ const App = () => (
                 />
                 <Route path="/admin/users" element={<AdminUsers />} />
                 <Route path="/admin/listings" element={<AdminListingsPage />} />
+                <Route
+                  path="/admin/listings/:slug"
+                  element={<AdminListingDetail />}
+                />
                 <Route
                   path="/admin/seller-verification"
                   element={<AdminVerify />}
