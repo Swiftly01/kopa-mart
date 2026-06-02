@@ -12,13 +12,50 @@ import { z } from "zod";
 import useSignup from "@/hooks/auth/mutations/useRegister";
 import { googleOAuthUrl } from "@/lib/utils/config";
 
-
 const signupSchema = z.object({
-  firstName: z.string().trim().min(2).max(40),
-  lastName: z.string().trim().min(2).max(40),
-  email: z.string().trim().email().max(255),
-  phoneNumber: z.string().trim().min(7).max(20),
-  password: z.string().min(6).max(100),
+  firstName: z
+    .string({
+      required_error: "First name is required",
+      invalid_type_error: "First name must be a string",
+    })
+    .trim()
+    .min(2, { message: "First name must be at least 2 characters long" })
+    .max(40, { message: "First name cannot exceed 40 characters" }),
+
+  lastName: z
+    .string({
+      required_error: "Last name is required",
+      invalid_type_error: "Last name must be a string",
+    })
+    .trim()
+    .min(2, { message: "Last name must be at least 2 characters long" })
+    .max(40, { message: "Last name cannot exceed 40 characters" }),
+
+  email: z
+    .string({
+      required_error: "Email is required",
+      invalid_type_error: "Email must be a string",
+    })
+    .trim()
+    .email({ message: "Please enter a valid email address" })
+    .max(255, { message: "Email cannot exceed 255 characters" }),
+
+  phoneNumber: z
+    .string({
+      required_error: "Phone number is required",
+      invalid_type_error: "Phone number must be a string",
+    })
+    .trim()
+    .min(7, { message: "Phone number must be at least 7 digits long" })
+    .max(20, { message: "Phone number cannot exceed 20 characters" }),
+
+  password: z
+    .string({
+      required_error: "Password is required",
+      invalid_type_error: "Password must be a string",
+    })
+    .min(6, { message: "Password must be at least 6 characters long" })
+    .max(100, { message: "Password cannot exceed 100 characters" }),
 });
 
 export type SignupFormData = z.infer<typeof signupSchema>;
@@ -46,7 +83,6 @@ const Signup = () => {
       password: data.password,
       phoneNumber: data.phoneNumber,
     };
- 
 
     try {
       await signup(payload);
@@ -57,7 +93,7 @@ const Signup = () => {
       });
       navigate("/verify-email?email=" + encodeURIComponent(data.email));
     } catch (err) {
-     // console.log(err.response);
+      // console.log(err.response);
     }
   };
 
@@ -131,11 +167,11 @@ const Signup = () => {
           <div>
             <Label>Phone</Label>
             <Input {...register("phoneNumber")} className="h-12 mt-1" />
-             {errors.phoneNumber && (
-                <p className="text-sm text-red-500">
-                  {errors.phoneNumber.message}
-                </p>
-              )}
+            {errors.phoneNumber && (
+              <p className="text-sm text-red-500">
+                {errors.phoneNumber.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -146,6 +182,11 @@ const Signup = () => {
                 {...register("password")}
                 className="h-12 pr-10"
               />
+              {errors.password && (
+                <p className="text-sm text-red-500">
+                  {errors.password.message}
+                </p>
+              )}
 
               <button
                 type="button"
