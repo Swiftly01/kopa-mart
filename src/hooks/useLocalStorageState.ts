@@ -1,15 +1,14 @@
-"use client";
 import { useEffect, useState } from "react";
 
 export function useLocalStorageState<T>(initialState: T, key: string) {
-  const [value, setValue] = useState<T | null>(initialState);
-
-  useEffect(() => {
+  const [value, setValue] = useState<T | null>(() => {
+    // Synchronous read on first render — no effect lag
+    if (typeof window === "undefined") return initialState;
     const storedValue = localStorage.getItem(key);
-    if (storedValue) {
-      setValue(JSON.parse(storedValue));
-    }
-  }, [key]);
+    return storedValue ? JSON.parse(storedValue) : initialState;
+  });
+
+  // Remove the first useEffect entirely — no longer needed
 
   useEffect(
     function () {

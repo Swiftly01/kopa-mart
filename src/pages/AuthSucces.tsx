@@ -43,7 +43,7 @@ const AuthSuccess = () => {
     isLoading,
     isError,
   } = useUser({
-    enabled: !!session?.token,
+    enabled: !!token && !!session?.token,
   });
 
   // SECOND EFFECT - Handles user data and final auth setup
