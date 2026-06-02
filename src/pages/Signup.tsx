@@ -166,7 +166,7 @@ const Signup = () => {
 
           <div>
             <Label>Phone</Label>
-            <Input {...register("phoneNumber")} className="h-12 mt-1" />
+            <Input placeholder="+2349111111111" {...register("phoneNumber")} className="h-12 mt-1" />
             {errors.phoneNumber && (
               <p className="text-sm text-red-500">
                 {errors.phoneNumber.message}
