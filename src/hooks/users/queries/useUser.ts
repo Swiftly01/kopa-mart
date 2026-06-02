@@ -13,7 +13,7 @@ export default function useUser(options?: UseUserOptions) {
   const { session } = useAuth();
 
   return useQuery<User>({
-    queryKey: userKeys.getUser(),
+    queryKey: [...userKeys.getUser(), session?.token],
     queryFn: UserService.getUser,
     enabled: options?.enabled ?? !!session?.token,
   });

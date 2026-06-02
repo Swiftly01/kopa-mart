@@ -46,7 +46,7 @@ const signupSchema = z.object({
       invalid_type_error: "Phone number must be a string",
     })
     .trim()
-    .min(7, { message: "Phone number must be at least 7 digits long" })
+    .min(11, { message: "Phone number must be at least 11  digits long" })
     .max(20, { message: "Phone number cannot exceed 20 characters" }),
 
   password: z
@@ -162,11 +162,18 @@ const Signup = () => {
           <div>
             <Label>Email</Label>
             <Input type="email" {...register("email")} className="h-12 mt-1" />
+            {errors.email && (
+              <p className="text-sm text-red-500">{errors.email.message}</p>
+            )}
           </div>
 
           <div>
             <Label>Phone</Label>
-            <Input placeholder="+2349111111111" {...register("phoneNumber")} className="h-12 mt-1" />
+            <Input
+              placeholder="+2349111111111"
+              {...register("phoneNumber")}
+              className="h-12 mt-1"
+            />
             {errors.phoneNumber && (
               <p className="text-sm text-red-500">
                 {errors.phoneNumber.message}
