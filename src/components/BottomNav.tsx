@@ -3,6 +3,8 @@ import { Home, Heart, Plus, User, Moon, Sun } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { cn } from "@/lib/utils/utils";
 import useUser from "@/hooks/users/queries/useUser";
+import { SellerVerificationStatusEnum } from "@/types/adminSellerVerification";
+import { UserRoleEnum } from "@/types/user";
 
 export const BottomNav = () => {
   const navigate = useNavigate();
@@ -11,12 +13,30 @@ export const BottomNav = () => {
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
 
-  
   const handleSell = () => {
-    if (user.role === "seller") {
-      return navigate("/seller-dashboard/create-listing");
+    // Not logged in or no onboarding data → start onboarding
+    if (!user) return navigate("/seller-onboarding/intro");
+
+    switch (user?.sellerOnboarding?.status) {
+      case SellerVerificationStatusEnum.APPROVED:
+        return navigate("/seller-dashboard/create-listing");
+
+      case SellerVerificationStatusEnum.IN_PROGRESS:
+        // Resume where they left off
+        return navigate("/seller-onboarding/intro");
+
+      case SellerVerificationStatusEnum.PENDING_REVIEW:
+        // Can't proceed — optionally show a toast/modal instead
+        return navigate("/seller-onboarding/pending");
+
+      case SellerVerificationStatusEnum.REJECTED:
+        // Let them reapply
+        return navigate("/seller-onboarding/intro");
+
+      case SellerVerificationStatusEnum.NOT_STARTED:
+      default:
+        return navigate("/seller-onboarding/intro");
     }
-    return navigate("/seller-onboarding/intro");
   };
 
   const items = [

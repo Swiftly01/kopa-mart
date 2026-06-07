@@ -18,15 +18,14 @@ export class SellerOnboardingService {
       formData,
       {
         headers: {
-          "Content-Type": "multipart/form-data"
-        }
-      }
+          "Content-Type": "multipart/form-data",
+        },
+      },
     );
 
     //console.log(response);
     return response.data;
   }
-
 
   static async submitSelfie(formData: FormData) {
     const response = await apiClient.post(
@@ -34,9 +33,9 @@ export class SellerOnboardingService {
       formData,
       {
         headers: {
-          "Content-Type": "multipart/form-data"
-        }
-      }
+          "Content-Type": "multipart/form-data",
+        },
+      },
     );
 
     //console.log(response);
@@ -49,12 +48,21 @@ export class SellerOnboardingService {
       formData,
       {
         headers: {
-          "Content-Type": "multipart/form-data"
-        }
-      }
+          "Content-Type": "multipart/form-data",
+        },
+      },
     );
 
     //console.log(response);
+    return response.data;
+  }
+
+  static async getSellerOnboardingData(userId: string) {
+    const response = await apiClient.get(
+      `${apiBaseUrl}/api/v1/seller/onboarding/${userId}/progress`,
+    );
+
+   // console.log(response);
     return response.data;
   }
 }

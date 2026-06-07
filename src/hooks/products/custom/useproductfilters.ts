@@ -99,20 +99,28 @@ export function useProductFilters() {
   const lgas = lgasData?.data?.lgas ?? [];
 
   // Category data
-  const { data: categoriesData, isLoading: isLoadingCategories } = useGetCategories();
-  const categories = useMemo(() => categoriesData?.data ?? [], [categoriesData]);
+  const { data: categoriesData, isLoading: isLoadingCategories } =
+    useGetCategories();
+  const categories = useMemo(
+    () => categoriesData?.data ?? [],
+    [categoriesData],
+  );
+
+  // Add this here
+  const category = searchParams.get("category") || "";
+  const state = searchParams.get("state") || "";
+  const lga = searchParams.get("lga") || "";
 
   // Query params for the products API
   const queryParams = useMemo(
     () => ({
       ...(debouncedQ.trim() ? { search: debouncedQ.trim() } : {}),
-      ...(searchParams.get("category") ? { categoryId: searchParams.get("category")! } : {}),
-      ...(searchParams.get("state") ? { stateName: searchParams.get("state")! } : {}),
-      ...(searchParams.get("lga") ? { lgaName: searchParams.get("lga")! } : {}),
+      ...(category ? { categoryId: category } : {}),
+      ...(state ? { stateName: state } : {}),
+      ...(lga ? { lgaName: lga } : {}),
     }),
-    [debouncedQ, searchParams],
+    [debouncedQ, category, state, lga],
   );
-
   return {
     // form
     register,

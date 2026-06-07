@@ -1,4 +1,3 @@
-
 import SignInPrompt from "@/components/SignInPrompt";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -23,6 +22,7 @@ import {
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import EditProfileModal from "@/components/ui/editProfileModal";
+import { SellerVerificationStatusEnum } from "@/types/sellerOnboarding";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // match backend limit
 
@@ -54,14 +54,20 @@ const Profile = () => {
 
   function handleLogout() {
     logOut();
-    appToast({ title: "Log Out", description: "You have logged out successfully" });
+    appToast({
+      title: "Log Out",
+      description: "You have logged out successfully",
+    });
     navigate("/", { replace: true });
   }
 
   if (typeof window !== "undefined" && !deferredPrompt) {
     window.addEventListener(
       "beforeinstallprompt",
-      (e: any) => { e.preventDefault(); setDeferredPrompt(e); },
+      (e: any) => {
+        e.preventDefault();
+        setDeferredPrompt(e);
+      },
       { once: true },
     );
   }
@@ -95,13 +101,20 @@ const Profile = () => {
       if (outcome === "accepted") toast({ title: "App installed!" });
       setDeferredPrompt(null);
     } else {
-      toast({ title: "Add to Home Screen", description: "Use your browser menu to install this app." });
+      toast({
+        title: "Add to Home Screen",
+        description: "Use your browser menu to install this app.",
+      });
     }
   };
 
-  const roleLabel = isSuperAdmin(user) ? "Super Admin" : isAdmin(user) ? "Admin" : null;
+  const roleLabel = isSuperAdmin(user)
+    ? "Super Admin"
+    : isAdmin(user)
+      ? "Admin"
+      : null;
 
-  const avatarSrc = user.profilePictureUrl  ?? null;
+  const avatarSrc = user.profilePictureUrl ?? null;
 
   return (
     <div className="max-w-2xl px-4 pt-4 pb-20 mx-auto space-y-5">
@@ -117,7 +130,11 @@ const Profile = () => {
           {isUploading ? (
             <Loader2 className="size-5 animate-spin" />
           ) : avatarSrc ? (
-            <img src={avatarSrc} alt="" className="object-cover w-full h-full" />
+            <img
+              src={avatarSrc}
+              alt=""
+              className="object-cover w-full h-full"
+            />
           ) : (
             user.firstName?.charAt(0).toUpperCase()
           )}
@@ -127,7 +144,13 @@ const Profile = () => {
             </span>
           )}
         </button>
-        <input ref={fileRef} type="file" accept="image/*" hidden onChange={onAvatarChange} />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={onAvatarChange}
+        />
 
         {/* User info + edit button */}
         <div className="flex-1 min-w-0">
@@ -138,7 +161,7 @@ const Profile = () => {
             {/* ── Edit icon ── */}
             <button
               onClick={() => setEditOpen(true)}
-              className="shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
+              className="p-1 transition-colors rounded-full shrink-0 hover:bg-muted"
               title="Edit profile"
             >
               <Pencil className="size-3.5 text-muted-foreground" />
@@ -149,7 +172,9 @@ const Profile = () => {
           <div className="flex flex-wrap gap-1 mt-1">
             <StatusBadge status={user.status} />
             {roleLabel && (
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${isSuperAdmin(user) ? "bg-primary/15 text-primary" : "bg-accent/20 text-accent-foreground"}`}>
+              <span
+                className={`text-xs px-2 py-1 rounded-full font-medium ${isSuperAdmin(user) ? "bg-primary/15 text-primary" : "bg-accent/20 text-accent-foreground"}`}
+              >
                 {roleLabel}
               </span>
             )}
@@ -164,7 +189,7 @@ const Profile = () => {
         user={user}
       />
 
-      {user.role === "seller" && (
+      {/* {user.role === "seller" && (
         <Link to="/seller-dashboard/manage-listings" className="flex items-center gap-3 p-4 card-listing">
           <div className="flex items-center justify-center size-10 rounded-xl bg-success/15 text-success">
             <LayoutDashboard className="size-5" />
@@ -198,50 +223,214 @@ const Profile = () => {
             <p className="text-xs text-muted-foreground">Post a product or service</p>
           </div>
         </Link>
-      )}
+      )} */}
+
+      {/* ── Seller status-aware links ── */}
+      {(() => {
+        const status = user.sellerOnboarding?.status;
+
+        switch (status) {
+          case SellerVerificationStatusEnum.APPROVED:
+            return (
+              <>
+                <Link
+                  to="/seller-dashboard/manage-listings"
+                  className="flex items-center gap-3 p-4 card-listing"
+                >
+                  <div className="flex items-center justify-center size-10 rounded-xl bg-success/15 text-success">
+                    <LayoutDashboard className="size-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Seller Dashboard</p>
+                    <p className="text-xs text-muted-foreground">
+                      Manage and add listings
+                    </p>
+                  </div>
+                </Link>
+
+                <Link
+                  to={`/seller/${user.id}`}
+                  className="flex items-center gap-3 p-4 card-listing"
+                >
+                  <div className="flex items-center justify-center size-10 rounded-xl bg-primary/15 text-primary">
+                    <ShieldCheck className="size-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">
+                      View my public seller page
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      See what buyers see
+                    </p>
+                  </div>
+                </Link>
+
+                <Link
+                  to="/seller-dashboard/create-listing"
+                  className="flex items-center gap-3 p-4 card-listing"
+                >
+                  <div className="flex items-center justify-center size-10 rounded-xl bg-primary/15 text-primary">
+                    <Plus className="size-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Add new listing</p>
+                    <p className="text-xs text-muted-foreground">
+                      Post a product or service
+                    </p>
+                  </div>
+                </Link>
+              </>
+            );
+
+          case SellerVerificationStatusEnum.PENDING_REVIEW:
+            return (
+              <div className="flex items-center gap-3 p-4 card-listing opacity-70">
+                <div className="flex items-center justify-center text-blue-500 size-10 rounded-xl bg-blue-500/15">
+                  <ShieldCheck className="size-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">
+                    Application Under Review
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    We'll notify you once approved
+                  </p>
+                </div>
+                {/* Pulsing dot */}
+                <span className="relative flex size-2 shrink-0">
+                  <span className="absolute inline-flex w-full h-full bg-blue-400 rounded-full opacity-75 animate-ping" />
+                  <span className="relative inline-flex bg-blue-400 rounded-full size-2" />
+                </span>
+              </div>
+            );
+
+          case SellerVerificationStatusEnum.IN_PROGRESS:
+            return (
+              <Link
+                to="/seller-onboarding/intro"
+                className="flex items-center gap-3 p-4 card-listing"
+              >
+                <div className="flex items-center justify-center size-10 rounded-xl bg-warning/15 text-warning">
+                  <ShieldCheck className="size-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">
+                    Complete Your Application
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Resume seller onboarding
+                  </p>
+                </div>
+                <span className="relative flex size-2 shrink-0">
+                  <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-amber-500" />
+                  <span className="relative inline-flex rounded-full size-2 bg-amber-500" />
+                </span>
+              </Link>
+            );
+
+          case SellerVerificationStatusEnum.REJECTED:
+            return (
+              <Link
+                to="/seller-onboarding/intro"
+                className="flex items-center gap-3 p-4 card-listing"
+              >
+                <div className="flex items-center justify-center size-10 rounded-xl bg-destructive/15 text-destructive">
+                  <ShieldCheck className="size-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Reapply as a Seller</p>
+                  <p className="text-xs text-muted-foreground">
+                    Your previous application was rejected
+                  </p>
+                </div>
+              </Link>
+            );
+
+          case SellerVerificationStatusEnum.NOT_STARTED:
+          default:
+            return (
+              <Link
+                to="/seller-onboarding/intro"
+                className="flex items-center gap-3 p-4 card-listing"
+              >
+                <div className="flex items-center justify-center size-10 rounded-xl bg-primary/15 text-primary">
+                  <ShieldCheck className="size-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Become a Seller</p>
+                  <p className="text-xs text-muted-foreground">
+                    For verified NYSC corps members
+                  </p>
+                </div>
+              </Link>
+            );
+        }
+      })()}
 
       {(user.role === "buyer" || user.role === "admin") && (
-        <Link to="/seller-onboarding/intro" className="flex items-center gap-3 p-4 card-listing">
+        <Link
+          to="/seller-onboarding/intro"
+          className="flex items-center gap-3 p-4 card-listing"
+        >
           <div className="flex items-center justify-center size-10 rounded-xl bg-primary/15 text-primary">
             <ShieldCheck className="size-5" />
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium">Become a Seller</p>
-            <p className="text-xs text-muted-foreground">For verified NYSC corps members</p>
+            <p className="text-xs text-muted-foreground">
+              For verified NYSC corps members
+            </p>
           </div>
         </Link>
       )}
 
       {isAdmin(user) && (
-        <Link to="/admin/dashboard" className="flex items-center gap-3 p-4 card-listing">
+        <Link
+          to="/admin/dashboard"
+          className="flex items-center gap-3 p-4 card-listing"
+        >
           <div className="flex items-center justify-center size-10 rounded-xl bg-accent/30 text-accent-foreground">
             <Settings className="size-5" />
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium">Admin Dashboard</p>
-            <p className="text-xs text-muted-foreground">Manage users, listings & verifications</p>
+            <p className="text-xs text-muted-foreground">
+              Manage users, listings & verifications
+            </p>
           </div>
         </Link>
       )}
 
       <div className="space-y-2">
-        <p className="text-xs font-semibold tracking-wider uppercase text-muted-foreground">Get the App</p>
-        <button onClick={handleAndroidInstall} className="flex items-center w-full gap-3 p-4 text-left transition-shadow card-listing hover:shadow-elevated">
+        <p className="text-xs font-semibold tracking-wider uppercase text-muted-foreground">
+          Get the App
+        </p>
+        <button
+          onClick={handleAndroidInstall}
+          className="flex items-center w-full gap-3 p-4 text-left transition-shadow card-listing hover:shadow-elevated"
+        >
           <div className="flex items-center justify-center size-10 rounded-xl bg-success/15 text-success">
             <Download className="size-5" />
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium">Download for Android</p>
-            <p className="text-xs text-muted-foreground">Install to your home screen</p>
+            <p className="text-xs text-muted-foreground">
+              Install to your home screen
+            </p>
           </div>
         </button>
-        <Link to="/install-ios" className="flex items-center gap-3 p-4 transition-shadow card-listing hover:shadow-elevated">
+        <Link
+          to="/install-ios"
+          className="flex items-center gap-3 p-4 transition-shadow card-listing hover:shadow-elevated"
+        >
           <div className="flex items-center justify-center size-10 rounded-xl bg-secondary text-foreground">
             <Smartphone className="size-5" />
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium">Download for iOS</p>
-            <p className="text-xs text-muted-foreground">Step-by-step guide for iPhone</p>
+            <p className="text-xs text-muted-foreground">
+              Step-by-step guide for iPhone
+            </p>
           </div>
         </Link>
       </div>
@@ -251,7 +440,10 @@ const Profile = () => {
         Logout
       </Button>
 
-      <Link to="/support" className="fixed z-50 flex items-center justify-center text-white transition-transform rounded-full bottom-20 right-4 size-14 bg-success shadow-elevated hover:scale-105">
+      <Link
+        to="/support"
+        className="fixed z-50 flex items-center justify-center text-white transition-transform rounded-full bottom-20 right-4 size-14 bg-success shadow-elevated hover:scale-105"
+      >
         <MessageCircle className="size-6" />
       </Link>
     </div>

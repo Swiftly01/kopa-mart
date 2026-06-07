@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import useGetProductBySlug from "@/hooks/products/queries/useGetProductBySlug";
 import { useToggleSavedProduct } from "@/hooks/saved-products/mutations/usetoggleSavedProduct";
 import { useGetSaveStatus } from "@/hooks/saved-products/queries/useGetSaveStatus";
+import useGetSellerOnboardingData from "@/hooks/seller/queries/useGetSellerOnboardingData";
+import useUser from "@/hooks/users/queries/useUser";
 import { conditionStyle } from "@/lib/productConfig";
 import { cn, formatNaira, timeAgo } from "@/lib/utils/utils";
 import {
@@ -33,6 +35,9 @@ const ListingDetail = () => {
   const { isSaved } = useGetSaveStatus(product?.id ?? "");
   const { mutate: toggleSave, isPending: isSavePending } =
     useToggleSavedProduct(product?.id ?? "");
+  const { data: sellerOnboarding } = useGetSellerOnboardingData(
+    product?.seller?.id,
+  );
 
   if (isLoading) return <DetailSkeleton />;
 
@@ -70,7 +75,11 @@ const ListingDetail = () => {
       })
     : null;
 
-  const waNumber = sellerPhone.replace(/[^\d+]/g, "");
+  const whatsappNumber =
+    sellerOnboarding?.storeProfileData?.whatsappNumber ?? sellerPhone;
+
+  const waNumber = whatsappNumber.replace(/[^\d+]/g, "");
+
   const waMsg = encodeURIComponent(
     `Hi, I'm interested in your "${product.name}" listing on Kopa Marketplace.`,
   );
@@ -79,14 +88,14 @@ const ListingDetail = () => {
     <div className="min-h-screen bg-[#f8f8f6]">
       {/* ── Top nav ── */}
       <div className="sticky top-0 z-30 bg-[#f8f8f6]/95 backdrop-blur border-b border-zinc-200/60">
-        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
+        <div className="flex items-center max-w-6xl gap-3 px-4 mx-auto h-14">
           <button
             onClick={() => navigate(-1)}
-            className="size-9 rounded-full bg-white border border-zinc-200 flex items-center justify-center shadow-sm hover:bg-zinc-50 transition-colors"
+            className="flex items-center justify-center transition-colors bg-white border rounded-full shadow-sm size-9 border-zinc-200 hover:bg-zinc-50"
           >
             <ArrowLeft className="size-4 text-zinc-700" />
           </button>
-          <span className="text-sm text-zinc-500 truncate flex-1">
+          <span className="flex-1 text-sm truncate text-zinc-500">
             {product.name}
           </span>
           <button
@@ -96,7 +105,7 @@ const ListingDetail = () => {
                 url: window.location.href,
               })
             }
-            className="size-9 rounded-full bg-white border border-zinc-200 flex items-center justify-center shadow-sm hover:bg-zinc-50 transition-colors"
+            className="flex items-center justify-center transition-colors bg-white border rounded-full shadow-sm size-9 border-zinc-200 hover:bg-zinc-50"
           >
             <Share2 className="size-4 text-zinc-700" />
           </button>
@@ -106,7 +115,7 @@ const ListingDetail = () => {
       <div className="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-8">
         {/* ══ LEFT: Images ══ */}
         <div className="space-y-3">
-          <div className="relative rounded-2xl overflow-hidden bg-white border border-zinc-200/80 shadow-sm">
+          <div className="relative overflow-hidden bg-white border shadow-sm rounded-2xl border-zinc-200/80">
             {mainImage ? (
               <img
                 src={mainImage}
@@ -146,7 +155,7 @@ const ListingDetail = () => {
                   url: window.location.href,
                 })
               }
-              className="absolute top-3 right-3 size-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-md hover:scale-105 transition-transform"
+              className="absolute flex items-center justify-center transition-transform rounded-full shadow-md top-3 right-3 size-10 bg-white/90 backdrop-blur hover:scale-105"
             >
               <Share2 className="size-4 text-zinc-500" />
             </button>
@@ -168,7 +177,7 @@ const ListingDetail = () => {
                   <img
                     src={img.cloudinaryUrl}
                     alt=""
-                    className="w-full h-full object-cover"
+                    className="object-cover w-full h-full"
                   />
                 </button>
               ))}
@@ -179,9 +188,9 @@ const ListingDetail = () => {
         {/* ══ RIGHT: Details ══ */}
         <div className="space-y-5">
           {/* Badges + time */}
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-medium px-3 py-1 rounded-full border border-zinc-200 bg-white text-zinc-700">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-3 py-1 text-xs font-medium bg-white border rounded-full border-zinc-200 text-zinc-700">
                 {product.category?.name ?? "—"}
               </span>
               {product.condition && (
@@ -203,7 +212,7 @@ const ListingDetail = () => {
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl font-bold text-zinc-900 leading-snug">
+          <h1 className="text-2xl font-bold leading-snug text-zinc-900">
             {product.name}
           </h1>
 
@@ -213,14 +222,14 @@ const ListingDetail = () => {
               {formatNaira(discountedPrice ?? product.price)}
             </span>
             {discountedPrice !== null && (
-              <span className="text-base text-zinc-400 line-through">
+              <span className="text-base line-through text-zinc-400">
                 {formatNaira(product.price)}
               </span>
             )}
           </div>
 
           {/* Location + Views */}
-          <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             {locationLabel && (
               <div className="flex items-center gap-1.5 text-sm text-zinc-500">
                 <MapPin className="size-4 text-emerald-500" />
@@ -235,8 +244,8 @@ const ListingDetail = () => {
 
           {/* Description */}
           <div>
-            <h2 className="font-semibold text-zinc-900 mb-2">Description</h2>
-            <p className="text-sm text-zinc-500 leading-relaxed whitespace-pre-line">
+            <h2 className="mb-2 font-semibold text-zinc-900">Description</h2>
+            <p className="text-sm leading-relaxed whitespace-pre-line text-zinc-500">
               {product.description}
             </p>
           </div>
@@ -247,7 +256,7 @@ const ListingDetail = () => {
               href={`https://wa.me/${waNumber}?text=${waMsg}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 h-12 rounded-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
+              className="flex items-center justify-center flex-1 h-12 gap-2 font-semibold text-white transition-colors rounded-full shadow-sm bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700"
             >
               <MessageCircle className="size-4" />
               Chat on WhatsApp
@@ -255,7 +264,7 @@ const ListingDetail = () => {
             {sellerPhone ? (
               <a
                 href={`tel:${sellerPhone}`}
-                className="h-12 px-5 rounded-full border-2 border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 font-semibold flex items-center justify-center gap-2 transition-colors"
+                className="flex items-center justify-center h-12 gap-2 px-5 font-semibold transition-colors bg-white border-2 rounded-full border-zinc-200 hover:bg-zinc-50 text-zinc-700"
               >
                 <Phone className="size-4" />
                 Call Seller
@@ -263,7 +272,7 @@ const ListingDetail = () => {
             ) : (
               <Link
                 to={`/seller/${product.sellerId}`}
-                className="h-12 px-5 rounded-full border-2 border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 font-semibold flex items-center justify-center gap-2 transition-colors"
+                className="flex items-center justify-center h-12 gap-2 px-5 font-semibold transition-colors bg-white border-2 rounded-full border-zinc-200 hover:bg-zinc-50 text-zinc-700"
               >
                 <Phone className="size-4" />
                 Call Seller
@@ -300,17 +309,17 @@ const ListingDetail = () => {
           </p>
 
           {/* Seller card */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-4 space-y-3 shadow-sm">
+          <div className="p-4 space-y-3 bg-white border shadow-sm rounded-2xl border-zinc-200">
             <p className="text-sm font-semibold text-zinc-500">
               About the Seller
             </p>
             <div className="flex items-center gap-3">
-              <div className="size-11 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-lg shrink-0">
+              <div className="flex items-center justify-center text-lg font-bold text-white rounded-full size-11 bg-emerald-500 shrink-0">
                 {sellerInitial}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <p className="font-semibold text-sm text-zinc-900">
+                  <p className="text-sm font-semibold text-zinc-900">
                     {sellerName}
                   </p>
                   {seller?.isEmailVerified && (
@@ -326,7 +335,7 @@ const ListingDetail = () => {
               </div>
               <Link
                 to={`/seller/${product.sellerId}`}
-                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 shrink-0 transition-colors"
+                className="flex items-center gap-1 text-xs font-semibold transition-colors text-emerald-600 hover:text-emerald-700 shrink-0"
               >
                 <Eye className="size-3" />
                 View Profile
@@ -360,7 +369,7 @@ const ListingDetail = () => {
               )}&body=${encodeURIComponent(
                 `Hi Kopa Support,\n\nI would like to report the following listing:\n\nListing: ${product.name}\nListing ID: ${product.id}\nSeller ID: ${product.sellerId}\nURL: ${window.location.href}\n\nReason for report:\n[Please describe the issue here]\n\nThank you.`,
               )}`}
-              className="flex items-center gap-1 text-red-400 hover:text-red-500 transition-colors font-medium"
+              className="flex items-center gap-1 font-medium text-red-400 transition-colors hover:text-red-500"
             >
               <Flag className="size-3" />
               Report this listing
@@ -370,15 +379,15 @@ const ListingDetail = () => {
       </div>
 
       {/* ── Safety tips ── */}
-      <div className="max-w-6xl mx-auto px-4 pb-12">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+      <div className="max-w-6xl px-4 pb-12 mx-auto">
+        <div className="p-6 bg-white border shadow-sm rounded-2xl border-zinc-200">
           <div className="flex items-center gap-2 mb-5">
             <ShieldCheck className="size-5 text-emerald-500" />
             <h3 className="font-semibold text-zinc-800">
               Safety Tips for Buyers
             </h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {[
               {
                 icon: <MapPinned className="size-5 text-emerald-500" />,
@@ -400,13 +409,13 @@ const ListingDetail = () => {
                 key={tip.title}
                 className="rounded-xl border border-zinc-100 bg-[#f8f8f6] p-4 space-y-2"
               >
-                <div className="size-9 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                <div className="flex items-center justify-center border rounded-full size-9 bg-emerald-50 border-emerald-100">
                   {tip.icon}
                 </div>
-                <p className="font-semibold text-sm text-zinc-800">
+                <p className="text-sm font-semibold text-zinc-800">
                   {tip.title}
                 </p>
-                <p className="text-xs text-zinc-500 leading-relaxed">
+                <p className="text-xs leading-relaxed text-zinc-500">
                   {tip.desc}
                 </p>
               </div>
