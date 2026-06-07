@@ -75,13 +75,13 @@ const ManageListings = () => {
       }, 400),
     );
   };
-
+   
   const queryParams = useMemo(
     () => ({
       page: currentPage,
       limit: ITEMS_PER_PAGE,
 
-      sellerId,
+     // sellerId,
 
       ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
 
@@ -98,7 +98,7 @@ const ManageListings = () => {
         : {}),
       ...(filters.sortBy ? { sortBy: filters.sortBy } : {}),
     }),
-    [currentPage, sellerId, debouncedSearch, filters],
+    [currentPage, debouncedSearch, filters],
   );
 
   const { data, isLoading, isError, isFetching } =
@@ -162,11 +162,11 @@ const ManageListings = () => {
       <SellerShell>
         <div className="flex items-center justify-center min-h-96">
           <div className="space-y-3 text-center">
-            <div className="size-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+            <div className="flex items-center justify-center mx-auto rounded-full size-12 bg-destructive/10">
               <AlertCircle className="size-6 text-destructive" />
             </div>
             <div className="space-y-1">
-              <p className="font-medium text-sm">Failed to load listings</p>
+              <p className="text-sm font-medium">Failed to load listings</p>
               <p className="text-xs text-muted-foreground">
                 Please refresh the page and try again.
               </p>
@@ -184,7 +184,7 @@ const ManageListings = () => {
         <div>
           <h1 className="text-lg font-semibold leading-none">My Listings</h1>
           {!isLoading && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="mt-1 text-xs text-muted-foreground">
               {totalCount.toLocaleString()}{" "}
               {totalCount === 1 ? "listing" : "listings"} total
             </p>
@@ -201,12 +201,12 @@ const ManageListings = () => {
       {/* Search + controls row */}
       <div className="flex gap-2 mb-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Search className="absolute -translate-y-1/2 left-3 top-1/2 size-4 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search by name, category, location…"
-            className="pl-10 h-10 rounded-2xl bg-secondary border-0 text-sm"
+            className="h-10 pl-10 text-sm border-0 rounded-2xl bg-secondary"
           />
           {/* Show spinner inside search box while fetching */}
           {isFetching && !isLoading && (
@@ -355,31 +355,31 @@ const ManageListings = () => {
         !debouncedSearch &&
         activeFilterCount === 0 ? (
         // Truly empty — no listings at all
-        <div className="flex flex-col items-center justify-center text-center py-20 gap-4">
-          <div className="size-14 rounded-2xl bg-secondary flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+          <div className="flex items-center justify-center size-14 rounded-2xl bg-secondary">
             <Package className="size-7 text-muted-foreground/60" />
           </div>
           <div className="space-y-1">
-            <p className="font-medium text-sm">No listings yet</p>
+            <p className="text-sm font-medium">No listings yet</p>
             <p className="text-xs text-muted-foreground max-w-56">
               Create your first listing to start selling.
             </p>
           </div>
           <Button asChild size="sm" className="bg-gradient-primary">
             <Link to="/seller-dashboard/create-listing">
-              <Plus className="size-4 mr-1" />
+              <Plus className="mr-1 size-4" />
               Create listing
             </Link>
           </Button>
         </div>
       ) : products.length === 0 ? (
         // Filtered — no matches
-        <div className="flex flex-col items-center justify-center text-center py-20 gap-4">
-          <div className="size-14 rounded-2xl bg-secondary flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+          <div className="flex items-center justify-center size-14 rounded-2xl bg-secondary">
             <Search className="size-7 text-muted-foreground/60" />
           </div>
           <div className="space-y-1">
-            <p className="font-medium text-sm">No results found</p>
+            <p className="text-sm font-medium">No results found</p>
             <p className="text-xs text-muted-foreground max-w-56">
               Try adjusting your search or filters.
             </p>
@@ -390,7 +390,7 @@ const ManageListings = () => {
               setSearchQuery("");
               setDebouncedSearch("");
             }}
-            className="text-xs text-primary underline underline-offset-2"
+            className="text-xs underline text-primary underline-offset-2"
           >
             Clear all filters
           </button>
@@ -415,7 +415,7 @@ const ManageListings = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {products.map((product) => (
                 <GridCard
                   key={product.id}

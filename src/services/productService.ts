@@ -45,6 +45,21 @@ export class ProductService {
     return response.data;
   }
 
+  static async getAllProducts(
+    params?: ProductSearchParams,
+  ): Promise<ProductListData> {
+    const clean = Object.fromEntries(
+      Object.entries(params).filter(
+        ([, v]) => v !== undefined && v !== "" && v !== null,
+      ),
+    );
+
+    const response = await apiClient.get(`${apiBaseUrl}/api/v1/products`, {
+      params: clean,
+    });
+    return response.data;
+  }
+
   static async getSellerProducts(
     params?: ProductSearchParams,
   ): Promise<ProductListData> {
@@ -53,7 +68,8 @@ export class ProductService {
         ([, v]) => v !== undefined && v !== "" && v !== null,
       ),
     );
-    const response = await apiClient.get(`${apiBaseUrl}/api/v1/products`, {
+
+    const response = await apiClient.get(`${apiBaseUrl}/api/v1/products/seller`, {
       params: clean,
     });
     return response.data;
@@ -73,14 +89,16 @@ export class ProductService {
     return response.data;
   }
 
-  static async publicSellerProducts(params: ProductParams & { sellerId: string }) {
-  const { sellerId, ...rest } = params;
-  const response = await apiClient.get(
-    `${apiBaseUrl}/api/v1/products/seller/${sellerId}`,
-    { params: rest },
-  );
-  return response.data;
-}
+  static async publicSellerProducts(
+    params: ProductParams & { sellerId: string },
+  ) {
+    const { sellerId, ...rest } = params;
+    const response = await apiClient.get(
+      `${apiBaseUrl}/api/v1/products/seller/${sellerId}`,
+      { params: rest },
+    );
+    return response.data;
+  }
 
   static async deleteProductImage(
     productId: string,

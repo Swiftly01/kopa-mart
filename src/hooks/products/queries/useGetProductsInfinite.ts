@@ -8,7 +8,7 @@ const useGetProductsInfinite = (params: Omit<ProductSearchParams, "page">) => {
     queryKey: ["products-infinite", params],
 
     queryFn: ({ pageParam = 1 }) =>
-      ProductService.getSellerProducts({
+      ProductService.getAllProducts({
         ...params,
         page: pageParam as number,
       }), 

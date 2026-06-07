@@ -15,7 +15,6 @@ const ITEMS_PER_PAGE = 10;
 
 const SellerProfile = () => {
   const { id } = useParams<{ id: string }>();
-
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useGetSellerProductsInfinite({ limit: ITEMS_PER_PAGE, sellerId: id! });
 
@@ -82,7 +81,6 @@ const SellerProfile = () => {
     return () => observer.disconnect();
   }, [products]);
 
-  // ── Seller display values ──────────────────────────────────────────────────
   // While loading we might not have seller data yet — handle gracefully
   const name = seller
     ? `${seller.firstName} ${seller.lastName}`.trim()
@@ -97,8 +95,8 @@ const SellerProfile = () => {
   // ── Not found (finished loading, still no products & no seller) ────────────
   if (!isLoading && products.length === 0) {
     return (
-      <div className="p-10 text-center text-sm text-muted-foreground">
-        Seller not found.{" "}
+      <div className="p-10 text-sm text-center text-muted-foreground">
+        Seller have no Listing yet.{" "}
         <Link to="/" className="text-primary">
           Go home
         </Link>
@@ -107,33 +105,31 @@ const SellerProfile = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-4 pb-10 space-y-5">
-      {/* ── Back nav ── */}
+    <div className="max-w-2xl px-4 pt-4 pb-10 mx-auto space-y-5">
       <div className="flex items-center gap-2">
         <Link
           to="/"
-          className="size-9 rounded-full bg-secondary flex items-center justify-center"
+          className="flex items-center justify-center rounded-full size-9 bg-secondary"
         >
           <ArrowLeft className="size-4" />
         </Link>
         <h1 className="font-bold">Seller profile</h1>
       </div>
 
-      {/* ── Seller card ── */}
-      <div className="card-listing p-5 flex items-center gap-4">
-        <div className="size-16 rounded-full bg-gradient-primary text-primary-foreground flex items-center justify-center text-2xl font-bold overflow-hidden">
+      <div className="flex items-center gap-4 p-5 card-listing">
+        <div className="flex items-center justify-center overflow-hidden text-2xl font-bold rounded-full size-16 bg-gradient-primary text-primary-foreground">
           {name[0]?.toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-lg truncate">{name}</p>
+          <p className="text-lg font-bold truncate">{name}</p>
           {location && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <p className="flex items-center gap-1 text-xs text-muted-foreground">
               <MapPin className="size-3" />
               {location}
             </p>
           )}
           {verified && (
-            <span className="badge-verified mt-1 flex items-center gap-1">
+            <span className="flex items-center gap-1 mt-1 badge-verified">
               <ShieldCheck className="size-3" />
               Verified NYSC Seller
             </span>
@@ -145,7 +141,7 @@ const SellerProfile = () => {
         <div className="flex gap-2">
           <a
             href={`tel:${phone}`}
-            className="flex-1 h-11 rounded-2xl bg-secondary text-secondary-foreground font-medium flex items-center justify-center gap-2"
+            className="flex items-center justify-center flex-1 gap-2 font-medium h-11 rounded-2xl bg-secondary text-secondary-foreground"
           >
             <Phone className="size-4" />
             Call
@@ -155,7 +151,7 @@ const SellerProfile = () => {
             href={`https://wa.me/${wa}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 h-11 rounded-2xl bg-gradient-primary text-primary-foreground font-medium flex items-center justify-center gap-2"
+            className="flex items-center justify-center flex-1 gap-2 font-medium h-11 rounded-2xl bg-gradient-primary text-primary-foreground"
           >
             <MessageCircle className="size-4" />
             WhatsApp

@@ -122,13 +122,13 @@ const Apply = () => {
   const canSubmit = !!frontFile && !!backFile && isValid && !isValidating;
 
   return (
-    <div className="max-w-2xl mx-auto px-5 pt-4 pb-16">
+    <div className="max-w-2xl px-5 pt-4 pb-16 mx-auto">
       <div className="flex items-center justify-between py-2">
         <Link to="/" className="flex items-center gap-2">
           <img
             src={nyscLogo}
             alt="Kopa Market"
-            className="size-8 rounded-lg object-cover ring-1 ring-border"
+            className="object-cover rounded-lg size-8 ring-1 ring-border"
           />
           <span className="font-semibold">Kopa Market</span>
         </Link>
@@ -142,23 +142,23 @@ const Apply = () => {
         <span className="text-muted-foreground">NYSC ID Upload</span>
       </div>
       <div className="mt-1.5 h-1 bg-secondary rounded-full overflow-hidden">
-        <div className="h-full w-2/4 bg-primary" />
+        <div className="w-2/4 h-full bg-primary" />
       </div>
 
       <div className="mt-6 grid md:grid-cols-[1fr,260px] gap-5">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="card-listing p-5 space-y-4"
+          className="p-5 space-y-4 card-listing"
         >
           <div>
             <h1 className="text-xl font-bold">Upload your NYSC ID</h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="mt-1 text-sm text-muted-foreground">
               Please upload clear photos of both the front and back of your
               valid NYSC identification card.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 p-2 rounded-lg bg-warning/10 border border-warning/20">
+          <div className="flex items-center gap-2 p-2 border rounded-lg bg-warning/10 border-warning/20">
             <AlertTriangle className="size-4 text-warning shrink-0" />
             <p className="text-[11px] text-muted-foreground">
               <strong>Max 2MB per image.</strong> Compress or resize before
@@ -189,11 +189,11 @@ const Apply = () => {
                       <img
                         src={preview}
                         alt={item.label}
-                        className="w-full h-full object-cover"
+                        className="object-cover w-full h-full"
                       />
                     ) : (
                       <>
-                        <div className="size-8 rounded-lg bg-background flex items-center justify-center">
+                        <div className="flex items-center justify-center rounded-lg size-8 bg-background">
                           <Upload className="size-4" />
                         </div>
                         <span className="text-xs font-medium">
@@ -212,7 +212,7 @@ const Apply = () => {
                     />
                   </label>
                   {fieldError && (
-                    <p className="text-red-500 text-xs mt-1">
+                    <p className="mt-1 text-xs text-red-500">
                       {fieldError.message}
                     </p>
                   )}
@@ -222,17 +222,17 @@ const Apply = () => {
           </div>
 
           <div className="pt-2 border-t border-border">
-            <p className="font-semibold text-sm mb-3">Confirm ID Details</p>
+            <p className="mb-3 text-sm font-semibold">Confirm ID Details</p>
             <div className="space-y-3">
               <div>
                 <Label>Full Name (as on ID)</Label>
                 <Input
                   {...register("fullName")}
-                  className="h-11 mt-1"
+                  className="mt-1 h-11"
                   placeholder="Enter full name"
                 />
                 {errors.fullName && (
-                  <p className="text-red-500 text-xs mt-1">
+                  <p className="mt-1 text-xs text-red-500">
                     {errors.fullName.message}
                   </p>
                 )}
@@ -244,10 +244,10 @@ const Apply = () => {
                   <Input
                     placeholder="e.g. OS/24B/1234"
                     {...register("stateCodeNumber")}
-                    className="h-11 mt-1"
+                    className="mt-1 h-11"
                   />
                   {errors.stateCodeNumber && (
-                    <p className="text-red-500 text-xs mt-1">
+                    <p className="mt-1 text-xs text-red-500">
                       {errors.stateCodeNumber?.message}
                     </p>
                   )}
@@ -275,7 +275,7 @@ const Apply = () => {
                       }
                     }}
                   >
-                    <SelectTrigger className="h-11 mt-1">
+                    <SelectTrigger className="mt-1 h-11">
                       <SelectValue placeholder="Select State" />
                     </SelectTrigger>
                     <SelectContent>
@@ -287,7 +287,7 @@ const Apply = () => {
                     </SelectContent>
                   </Select>
                   {errors.stateCode && (
-                    <p className="text-red-500 text-xs mt-1">
+                    <p className="mt-1 text-xs text-red-500">
                       {errors.stateCode?.message}
                     </p>
                   )}
@@ -295,14 +295,14 @@ const Apply = () => {
               </div>
 
               <div>
-                <Label>ID Number</Label>
+                <Label>NIN Number</Label>
                 <Input
                   placeholder="Enter ID number"
                   {...register("idNumber")}
-                  className="h-11 mt-1"
+                  className="mt-1 h-11"
                 />
                 {errors.idNumber && (
-                  <p className="text-red-500 text-xs mt-1">
+                  <p className="mt-1 text-xs text-red-500">
                     {errors.idNumber?.message}
                   </p>
                 )}
@@ -320,7 +320,7 @@ const Apply = () => {
                   }}
                   disabled={!selectedStateCode || lgasLoading}
                 >
-                  <SelectTrigger className="h-11 mt-1">
+                  <SelectTrigger className="mt-1 h-11">
                     <SelectValue
                       placeholder={
                         !selectedStateCode
@@ -340,7 +340,7 @@ const Apply = () => {
                   </SelectContent>
                 </Select>
                 {errors.ppaLga && (
-                  <p className="text-red-500 text-xs mt-1">
+                  <p className="mt-1 text-xs text-red-500">
                     {errors.ppaLga?.message}
                   </p>
                 )}
@@ -371,10 +371,10 @@ const Apply = () => {
           </div>
         </form>
 
-        <aside className="card-listing p-4 h-fit space-y-3">
+        <aside className="p-4 space-y-3 card-listing h-fit">
           <div className="flex items-center gap-2">
             <Lightbulb className="size-4 text-warning" />
-            <p className="font-semibold text-sm">Upload Guidance</p>
+            <p className="text-sm font-semibold">Upload Guidance</p>
           </div>
           <p className="text-xs text-muted-foreground">
             Follow these tips to ensure your ID is approved quickly.

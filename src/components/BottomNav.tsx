@@ -1,16 +1,21 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Home, Heart, Plus, User, Moon, Sun } from "lucide-react";
-import { useStore, useCurrentUser } from "@/store/useStore";
+import { useStore } from "@/store/useStore";
 import { cn } from "@/lib/utils/utils";
+import useUser from "@/hooks/users/queries/useUser";
 
 export const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = useCurrentUser();
+  const { data: user } = useUser();
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
 
+  
   const handleSell = () => {
+    if (user.role === "seller") {
+      return navigate("/seller-dashboard/create-listing");
+    }
     return navigate("/seller-onboarding/intro");
   };
 
@@ -31,7 +36,7 @@ export const BottomNav = () => {
       className="fixed bottom-0 inset-x-0 z-50 border-t border-border bg-background/95 backdrop-blur-lg pb-[env(safe-area-inset-bottom)]"
       aria-label="Primary"
     >
-      <ul className="grid grid-cols-5 max-w-2xl mx-auto">
+      <ul className="grid max-w-2xl grid-cols-5 mx-auto">
         {items.map((it, i) => {
           const Icon = it.icon;
           if ("sell" in it) {
@@ -39,7 +44,7 @@ export const BottomNav = () => {
               <li key={i} className="flex justify-center -mt-5">
                 <button
                   onClick={handleSell}
-                  className="size-14 rounded-full bg-gradient-primary text-primary-foreground shadow-elevated flex items-center justify-center active:scale-95 transition-transform"
+                  className="flex items-center justify-center transition-transform rounded-full size-14 bg-gradient-primary text-primary-foreground shadow-elevated active:scale-95"
                   aria-label="Sell"
                 >
                   <Icon className="size-6" />
