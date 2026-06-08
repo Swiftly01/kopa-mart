@@ -57,6 +57,7 @@ export class ProductService {
     const response = await apiClient.get(`${apiBaseUrl}/api/v1/products`, {
       params: clean,
     });
+    console.log(response);
     return response.data;
   }
 

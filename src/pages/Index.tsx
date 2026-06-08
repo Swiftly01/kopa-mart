@@ -38,10 +38,11 @@ const Index = () => {
     queryParams,
   } = useProductFilters();
 
-  
-
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useGetProductsInfinite({ limit: ITEMS_PER_PAGE, ...queryParams });
+    useGetProductsInfinite({
+      limit: ITEMS_PER_PAGE,
+      ...queryParams,
+    });
 
   const products = useMemo(
     () => data?.pages.flatMap((p) => p.data) ?? [],
@@ -68,39 +69,39 @@ const Index = () => {
 
   // Card entrance animations
   const gridRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!gridRef.current) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const el = entry.target as HTMLElement;
-            el.classList.add("opacity-100");
-            el.classList.remove("opacity-0");
-            el.style.transform = "translate(0, 0)";
-            observer.unobserve(el);
-          }
-        });
-      },
-      { threshold: 0.05, rootMargin: "50px" },
-    );
-    const cards = gridRef.current.querySelectorAll(
-      ".listing-animate.opacity-0",
-    );
-    cards.forEach((card, index) => {
-      const el = card as HTMLElement;
-      el.style.transform =
-        index % 4 === 0
-          ? "translateY(2rem)"
-          : index % 4 === 1
-            ? "translateX(-2rem)"
-            : index % 4 === 2
-              ? "translateY(2rem)"
-              : "translateX(2rem)";
-      observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, [products]);
+  // useEffect(() => {
+  //   if (!gridRef.current) return;
+  //   const observer = new IntersectionObserver(
+  //     (entries) => {
+  //       entries.forEach((entry) => {
+  //         if (entry.isIntersecting) {
+  //           const el = entry.target as HTMLElement;
+  //           el.classList.add("opacity-100");
+  //           el.classList.remove("opacity-0");
+  //           el.style.transform = "translate(0, 0)";
+  //           observer.unobserve(el);
+  //         }
+  //       });
+  //     },
+  //     { threshold: 0.05, rootMargin: "50px" },
+  //   );
+  //   const cards = gridRef.current.querySelectorAll(
+  //     ".listing-animate.opacity-0",
+  //   );
+  //   cards.forEach((card, index) => {
+  //     const el = card as HTMLElement;
+  //     el.style.transform =
+  //       index % 4 === 0
+  //         ? "translateY(2rem)"
+  //         : index % 4 === 1
+  //           ? "translateX(-2rem)"
+  //           : index % 4 === 2
+  //             ? "translateY(2rem)"
+  //             : "translateX(2rem)";
+  //     observer.observe(el);
+  //   });
+  //   return () => observer.disconnect();
+  // }, [products]);
 
   const { data: user } = useUser();
   const sellerStatus = user?.sellerOnboarding?.status ?? null;

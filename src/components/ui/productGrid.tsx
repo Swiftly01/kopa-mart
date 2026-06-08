@@ -37,12 +37,12 @@ export const ProductGrid = ({
 
   if (products.length === 0) {
     return (
-      <div className="text-center py-16 space-y-2 text-muted-foreground text-sm">
+      <div className="py-16 space-y-2 text-sm text-center text-muted-foreground">
         <p>No listings match your filters.</p>
         {activeFilters > 0 && (
           <button
             onClick={onClearFilters}
-            className="text-xs text-primary underline underline-offset-2"
+            className="text-xs underline text-primary underline-offset-2"
           >
             Clear filters
           </button>
@@ -60,21 +60,27 @@ export const ProductGrid = ({
         {products.map((l, i) => (
           <div
             key={l.id}
-            className="listing-animate opacity-0 transition-all duration-700 ease-out"
-            style={{
-              transform:
-                i % 4 === 0
-                  ? "translateY(2rem)"
-                  : i % 4 === 1
-                    ? "translateX(-2rem)"
-                    : i % 4 === 2
-                      ? "translateY(2rem)"
-                      : "translateX(2rem)",
-              transitionDelay: `${(i % cols) * 80}ms`,
-            }}
+            className="fade-up"
           >
             <ListingCard listing={l} />
           </div>
+          // <div
+          //   key={l.id}
+          //   className="transition-all duration-700 ease-out listing-animate"
+          //   style={{
+          //     transform:
+          //       i % 4 === 0
+          //         ? "translateY(2rem)"
+          //         : i % 4 === 1
+          //           ? "translateX(-2rem)"
+          //           : i % 4 === 2
+          //             ? "translateY(2rem)"
+          //             : "translateX(2rem)",
+          //     transitionDelay: `${(i % cols) * 80}ms`,
+          //   }}
+          // >
+          //   <ListingCard listing={l} />
+          // </div>
         ))}
       </div>
 
@@ -89,7 +95,7 @@ export const ProductGrid = ({
       )}
 
       {!hasNextPage && !isFetchingNextPage && products.length > 0 && (
-        <p className="text-center text-xs text-muted-foreground py-5">
+        <p className="py-5 text-xs text-center text-muted-foreground">
           You've seen all {products.length} listings 🎉
         </p>
       )}

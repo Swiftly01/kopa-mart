@@ -11,7 +11,7 @@ const useGetProductsInfinite = (params: Omit<ProductSearchParams, "page">) => {
       ProductService.getAllProducts({
         ...params,
         page: pageParam as number,
-      }), 
+      }),
 
     initialPageParam: 1,
 
