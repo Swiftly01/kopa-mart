@@ -5,20 +5,25 @@ import { userKeys } from "../userKey";
 import appToast from "@/lib/appToast";
 import { AxiosError } from "axios";
 import { handleAxiosError } from "@/lib/utils/errors/errorHandler";
+import { UseFormSetError } from "react-hook-form";
+import { FormValues } from "@/components/ui/editProfileModal";
 
-export default function useUpdateProfile() {
+export default function useUpdateProfile(
+  setError: UseFormSetError<FormValues>,
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: UserService.updateProfile,
     onSuccess: (updatedUser) => {
-      queryClient.setQueryData<User>(userKeys.getUser(), (prev) =>
-        prev ? { ...prev, ...updatedUser } : updatedUser,
-      );
+      // queryClient.setQueryData<User>(userKeys.getUser(), (prev) =>
+      //   prev ? { ...prev, ...updatedUser } : updatedUser,
+      // );
+      queryClient.invalidateQueries();
       appToast({ title: "Profile updated successfully" });
     },
     onError: (err: AxiosError) => {
-      handleAxiosError(err);  
+      handleAxiosError(err, setError);
     },
   });
 }

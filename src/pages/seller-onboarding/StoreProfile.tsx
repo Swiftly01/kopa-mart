@@ -29,7 +29,12 @@ const storeProfileSchema = z.object({
     .string()
     .min(2, "Store name must be at least 2 characters")
     .max(100),
-  whatsappNumber: z.string().min(10, "Please enter a valid WhatsApp number"),
+  whatsappNumber: z
+    .string()
+    .regex(
+      /^\+234\d{10}$/,
+      "Enter a valid Nigerian number e.g. +2349131365111",
+    ),
   logo: z
     .instanceof(File)
     .optional()
@@ -42,7 +47,6 @@ const storeProfileSchema = z.object({
   campMeetup: z.boolean().default(true),
   localDelivery: z.boolean().default(false),
 });
-
 type StoreProfileSchema = z.infer<typeof storeProfileSchema>;
 
 const StoreProfile = () => {
@@ -151,9 +155,10 @@ const StoreProfile = () => {
           title: "Submit store profile",
           description: "Store profile submitted successfully",
         });
-        navigate('/seller-onboarding/pending');
+        navigate("/seller-onboarding/pending");
       },
       onError: (err: AxiosError) => {
+        console.log(err.response);
         handleAxiosError(err, setError);
       },
     });
@@ -163,13 +168,13 @@ const StoreProfile = () => {
   const canSubmit = isValid && !isValidating && !isSubmitting;
 
   return (
-    <div className="max-w-2xl mx-auto px-5 pt-4 pb-16">
+    <div className="max-w-2xl px-5 pt-4 pb-16 mx-auto">
       <div className="flex items-center justify-between py-2">
         <Link to="/" className="flex items-center gap-2">
           <img
             src={nyscLogo}
             alt="Kopa Market"
-            className="size-8 rounded-lg object-cover ring-1 ring-border"
+            className="object-cover rounded-lg size-8 ring-1 ring-border"
           />
           <span className="font-semibold">Kopa Market</span>
         </Link>
@@ -183,23 +188,23 @@ const StoreProfile = () => {
         <span className="text-muted-foreground">Store Profile</span>
       </div>
       <div className="mt-1.5 h-1 bg-secondary rounded-full overflow-hidden">
-        <div className="h-full w-full bg-primary" />
+        <div className="w-full h-full bg-primary" />
       </div>
 
       <div className="mt-6 grid md:grid-cols-[1fr,260px] gap-5">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="card-listing p-5 space-y-4"
+          className="p-5 space-y-4 card-listing"
         >
           <div>
             <h1 className="text-xl font-bold">Create Store Profile</h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="mt-1 text-sm text-muted-foreground">
               Set up your digital storefront. This is how other corps members
               will see you on Kopa Marketplace.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 p-2 rounded-lg bg-warning/10 border border-warning/20">
+          <div className="flex items-center gap-2 p-2 border rounded-lg bg-warning/10 border-warning/20">
             <AlertTriangle className="size-4 text-warning shrink-0" />
             <p className="text-[11px] text-muted-foreground">
               <strong>Max 1MB per image.</strong> Compress or resize before
@@ -217,7 +222,7 @@ const StoreProfile = () => {
                 <img
                   src={logoPreview}
                   alt="Store logo preview"
-                  className="w-full h-full object-cover"
+                  className="object-cover w-full h-full"
                 />
               ) : (
                 <>
@@ -236,7 +241,7 @@ const StoreProfile = () => {
               />
             </label>
             {errors.logo && (
-              <p className="text-red-500 text-xs mt-1">{errors.logo.message}</p>
+              <p className="mt-1 text-xs text-red-500">{errors.logo.message}</p>
             )}
           </div>
 
@@ -246,10 +251,10 @@ const StoreProfile = () => {
             <Input
               {...register("storeName")}
               placeholder="e.g. Kopa Kicks & Wears"
-              className="h-11 mt-1"
+              className="mt-1 h-11"
             />
             {errors.storeName && (
-              <p className="text-red-500 text-xs mt-1">
+              <p className="mt-1 text-xs text-red-500">
                 {errors.storeName.message}
               </p>
             )}
@@ -259,18 +264,18 @@ const StoreProfile = () => {
           <div>
             <Label>
               WhatsApp Number{" "}
-              <span className="text-muted-foreground font-normal text-xs">
+              <span className="text-xs font-normal text-muted-foreground">
                 (Required for buyers to contact you)
               </span>
             </Label>
             <Input
               {...register("whatsappNumber")}
               placeholder="+234 801 234 5678"
-              className="h-11 mt-1"
+              className="mt-1 h-11"
               type="tel"
             />
             {errors.whatsappNumber && (
-              <p className="text-red-500 text-xs mt-1">
+              <p className="mt-1 text-xs text-red-500">
                 {errors.whatsappNumber.message}
               </p>
             )}
@@ -355,7 +360,7 @@ const StoreProfile = () => {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 size-4 animate-spin" />
                   Submitting...
                 </>
               ) : (
@@ -366,15 +371,15 @@ const StoreProfile = () => {
         </form>
 
         {/* Sidebar */}
-        <aside className="bg-foreground text-background rounded-2xl p-5 space-y-3 h-fit">
+        <aside className="p-5 space-y-3 bg-foreground text-background rounded-2xl h-fit">
           <p className="font-bold">Your Digital Storefront.</p>
           <p className="text-xs opacity-80">
             Verified. Trusted. Ready for business.
           </p>
-          <div className="mt-4 bg-background/10 rounded-xl p-3 space-y-2">
-            <div className="size-10 rounded-lg bg-background/20" />
-            <div className="h-2 w-2/3 rounded bg-background/20" />
-            <div className="h-2 w-1/2 rounded bg-background/20" />
+          <div className="p-3 mt-4 space-y-2 bg-background/10 rounded-xl">
+            <div className="rounded-lg size-10 bg-background/20" />
+            <div className="w-2/3 h-2 rounded bg-background/20" />
+            <div className="w-1/2 h-2 rounded bg-background/20" />
           </div>
           <div className="flex items-center gap-3 pt-2 text-[10px] opacity-70">
             <span className="flex items-center gap-1">

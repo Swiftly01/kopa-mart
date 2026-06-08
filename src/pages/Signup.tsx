@@ -41,13 +41,11 @@ const signupSchema = z.object({
     .max(255, { message: "Email cannot exceed 255 characters" }),
 
   phoneNumber: z
-    .string({
-      required_error: "Phone number is required",
-      invalid_type_error: "Phone number must be a string",
-    })
-    .trim()
-    .min(11, { message: "Phone number must be at least 11  digits long" })
-    .max(20, { message: "Phone number cannot exceed 20 characters" }),
+    .string()
+    .regex(
+      /^\+234\d{10}$/,
+      "Enter a valid Nigerian number e.g. +2349131365111",
+    ),
 
   password: z
     .string({
@@ -102,10 +100,10 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-soft flex flex-col px-5 py-10">
-      <div className="max-w-md mx-auto w-full flex-1">
+    <div className="flex flex-col min-h-screen px-5 py-10 bg-gradient-soft">
+      <div className="flex-1 w-full max-w-md mx-auto">
         <Link to="/" className="flex items-center gap-2 mb-10">
-          <img src={nyscLogo} className="size-8 rounded-lg" />
+          <img src={nyscLogo} className="rounded-lg size-8" />
           <span className="font-bold">Kopa Marketplace</span>
         </Link>
 
@@ -113,7 +111,7 @@ const Signup = () => {
 
         <button
           onClick={googleSignup}
-          className="w-full mt-4 h-12 rounded-xl border border-border bg-background flex items-center justify-center gap-3 font-medium text-sm hover:bg-secondary transition-colors mb-4"
+          className="flex items-center justify-center w-full h-12 gap-3 mt-4 mb-4 text-sm font-medium transition-colors border rounded-xl border-border bg-background hover:bg-secondary"
         >
           <svg className="size-5" viewBox="0 0 24 24">
             <path
@@ -136,7 +134,7 @@ const Signup = () => {
           Continue with Google
         </button>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>First name</Label>
@@ -198,7 +196,7 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={() => setShowPw(!showPw)}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
+                className="absolute -translate-y-1/2 right-3 top-1/2"
               >
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -210,7 +208,7 @@ const Signup = () => {
           </Button>
         </form>
 
-        <p className="text-sm text-center mt-6">
+        <p className="mt-6 text-sm text-center">
           Already have an account? <Link to="/login">Sign in</Link>
         </p>
       </div>

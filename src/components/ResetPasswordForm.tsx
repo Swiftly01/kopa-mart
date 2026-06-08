@@ -16,10 +16,10 @@ import { z } from "zod";
 
 const resetPasswordSchema = z
   .object({
-    password: z.string().min(6, "Password must be at least 6 characters"),
+    newPassword: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
   })
-  .refine((data) => data.password === data.confirmPassword, {
+  .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
@@ -48,7 +48,7 @@ export default function ResetPasswordForm() {
     const payload = {
       token,
       email,
-      newPassword: data.password,
+      newPassword: data.newPassword,
     };
 
     resetPassword(payload, {
@@ -61,19 +61,20 @@ export default function ResetPasswordForm() {
         navigate("/login");
       },
       onError: (error: AxiosError) => {
+        console.log(error.response);
         handleAxiosError(error, setError);
       },
     });
   };
 
   return (
-    <div className="py-24 bg-gradient-soft flex flex-col items-center justify-center px-5">
-      <div className="max-w-md w-full space-y-6">
+    <div className="flex flex-col items-center justify-center px-5 py-24 bg-gradient-soft">
+      <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <div className="mx-auto size-16 rounded-full bg-success/15 flex items-center justify-center mb-4">
+          <div className="flex items-center justify-center mx-auto mb-4 rounded-full size-16 bg-success/15">
             <CheckCircle className="size-8 text-success" />
           </div>
-          <h1 className="text-2xl font-bold mb-1">Create New Password</h1>
+          <h1 className="mb-1 text-2xl font-bold">Create New Password</h1>
           <p className="text-sm text-muted-foreground">
             Enter your new password below.
           </p>
@@ -82,9 +83,11 @@ export default function ResetPasswordForm() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <Label>New password</Label>
-            <Input type="password" {...register("password")} />
-            {errors.password && (
-              <p className="text-sm text-red-500">{errors.password.message}</p>
+            <Input type="password" {...register("newPassword")} />
+            {errors.newPassword && (
+              <p className="text-sm text-red-500">
+                {errors.newPassword.message}
+              </p>
             )}
           </div>
 

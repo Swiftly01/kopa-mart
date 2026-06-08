@@ -182,50 +182,14 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* ── Edit profile modal ────────────────────────────────────────────── */}
+      
       <EditProfileModal
         open={editOpen}
         onClose={() => setEditOpen(false)}
         user={user}
       />
 
-      {/* {user.role === "seller" && (
-        <Link to="/seller-dashboard/manage-listings" className="flex items-center gap-3 p-4 card-listing">
-          <div className="flex items-center justify-center size-10 rounded-xl bg-success/15 text-success">
-            <LayoutDashboard className="size-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium">Seller Dashboard</p>
-            <p className="text-xs text-muted-foreground">Manage and add listings</p>
-          </div>
-        </Link>
-      )}
-
-      {user.role === "seller" && (
-        <Link to={`/seller/${user.id}`} className="flex items-center gap-3 p-4 card-listing">
-          <div className="flex items-center justify-center size-10 rounded-xl bg-primary/15 text-primary">
-            <ShieldCheck className="size-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium">View my public seller page</p>
-            <p className="text-xs text-muted-foreground">See what buyers see</p>
-          </div>
-        </Link>
-      )}
-
-      {user.role === "seller" && (
-        <Link to="/seller-dashboard/create-listing" className="flex items-center gap-3 p-4 card-listing">
-          <div className="flex items-center justify-center size-10 rounded-xl bg-primary/15 text-primary">
-            <Plus className="size-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium">Add new listing</p>
-            <p className="text-xs text-muted-foreground">Post a product or service</p>
-          </div>
-        </Link>
-      )} */}
-
-      {/* ── Seller status-aware links ── */}
+     
       {(() => {
         const status = user.sellerOnboarding?.status;
 

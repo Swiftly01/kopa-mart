@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,12 +21,13 @@ const schema = z.object({
   lastName: z.string().min(1, "Last name is required").max(100),
   phoneNumber: z
     .string()
-    .regex(/^\+?[0-9\s\-()]{7,20}$/, "Enter a valid phone number")
-    .optional()
-    .or(z.literal("")),
+    .regex(
+      /^\+234\d{10}$/,
+      "Enter a valid Nigerian number e.g. +2349131365111",
+    ),
 });
 
-type FormValues = z.infer<typeof schema>;
+export type FormValues = z.infer<typeof schema>;
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface EditProfileModalProps {
@@ -41,12 +41,12 @@ export default function EditProfileModal({
   onClose,
   user,
 }: EditProfileModalProps) {
-  const { mutate, isPending } = useUpdateProfile();
 
   const {
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -66,6 +66,9 @@ export default function EditProfileModal({
     });
   }, [user, reset]);
 
+  const { mutate, isPending } = useUpdateProfile(setError);
+
+
   const onSubmit = (values: FormValues) => {
     mutate(
       {
@@ -79,12 +82,12 @@ export default function EditProfileModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-sm w-full">
+      <DialogContent className="w-full max-w-sm">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="pt-2 space-y-4">
           {/* First name */}
           <div className="space-y-1">
             <Label htmlFor="firstName">First Name</Label>
