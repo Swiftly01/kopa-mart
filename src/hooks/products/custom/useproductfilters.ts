@@ -10,6 +10,7 @@ interface FilterValues {
   state: string;
   lga: string;
   category: string;
+  categorySlug: string;
 }
 
 const DEBOUNCE_MS = 400;
@@ -99,15 +100,26 @@ export function useProductFilters() {
   const lgas = lgasData?.data?.lgas ?? [];
 
   // Category data
-  const { data: categoriesData, isLoading: isLoadingCategories } = useGetCategories();
-  const categories = useMemo(() => categoriesData?.data ?? [], [categoriesData]);
+  const { data: categoriesData, isLoading: isLoadingCategories } =
+    useGetCategories();
+  const categories = useMemo(
+    () => categoriesData?.data ?? [],
+    [categoriesData],
+  );
 
   // Query params for the products API
   const queryParams = useMemo(
     () => ({
       ...(debouncedQ.trim() ? { search: debouncedQ.trim() } : {}),
-      ...(searchParams.get("category") ? { categoryId: searchParams.get("category")! } : {}),
-      ...(searchParams.get("state") ? { stateName: searchParams.get("state")! } : {}),
+      ...(searchParams.get("category")
+        ? { categoryId: searchParams.get("category")! }
+        : {}),
+      ...(searchParams.get("categorySlug")
+        ? { categorySlug: searchParams.get("categorySlug")! }
+        : {}),
+      ...(searchParams.get("state")
+        ? { stateName: searchParams.get("state")! }
+        : {}),
       ...(searchParams.get("lga") ? { lgaName: searchParams.get("lga")! } : {}),
     }),
     [debouncedQ, searchParams],

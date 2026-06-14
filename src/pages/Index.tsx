@@ -253,10 +253,13 @@ const Index = () => {
                   <Loader2 className="mx-auto size-12 animate-spin text-primary" />
                 ) : (
                   [...categories, ...categories].map(
-                    (c: { name: string; icon: string }, i: number) => (
+                    (
+                      c: { name: string; icon: string; slug: string },
+                      i: number,
+                    ) => (
                       <Link
                         key={`${c.name}-${i}`}
-                        to={`/listings?category=${encodeURIComponent(c.name)}`}
+                        to={`/listings?categorySlug=${encodeURIComponent(c.slug)}`}
                         className="flex flex-col items-center gap-2 w-[72px] shrink-0"
                       >
                         <div className="flex items-center justify-center text-2xl size-16 rounded-2xl bg-secondary">
@@ -276,20 +279,22 @@ const Index = () => {
               {isLoadingCategories ? (
                 <Loader2 className="mx-auto size-12 animate-spin text-primary" />
               ) : (
-                categories.map((c: { name: string; icon: string }) => (
-                  <Link
-                    key={c.name}
-                    to={`/listings?category=${encodeURIComponent(c.name)}`}
-                    className="flex flex-col items-center gap-2 w-[72px]"
-                  >
-                    <div className="flex items-center justify-center text-2xl transition-transform size-16 rounded-2xl bg-secondary hover:scale-105">
-                      {c.icon}
-                    </div>
-                    <span className="text-[11px] text-center leading-tight">
-                      {c.name}
-                    </span>
-                  </Link>
-                ))
+                categories.map(
+                  (c: { name: string; icon: string; slug: string }) => (
+                    <Link
+                      key={c.name}
+                      to={`/listings?categorySlug=${encodeURIComponent(c.slug)}`}
+                      className="flex flex-col items-center gap-2 w-[72px]"
+                    >
+                      <div className="flex items-center justify-center text-2xl transition-transform size-16 rounded-2xl bg-secondary hover:scale-105">
+                        {c.icon}
+                      </div>
+                      <span className="text-[11px] text-center leading-tight">
+                        {c.name}
+                      </span>
+                    </Link>
+                  ),
+                )
               )}
             </div>
           )}
