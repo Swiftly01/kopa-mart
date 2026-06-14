@@ -28,7 +28,7 @@ export class CategoryService {
       {
         params: {
           page: params?.page,
-          limit: params?.limit,
+          limit: params?.limit ?? 20,
           search: params?.search,
         },
       },
