@@ -43,7 +43,7 @@ const schema = z.object({
     .number({ invalid_type_error: "Price is required" })
     .positive("Price must be positive")
     .max(100_000_000),
-  discountPercentage: z.number().min(0).max(100).optional().nullable(),
+  discountPercentage: z.number().min(0).max(100).default(0),
   stock: z
     .number({ invalid_type_error: "Stock is required" })
     .int()
@@ -159,7 +159,7 @@ const CreateListing = () => {
     defaultValues: {
       name: "",
       price: undefined,
-      discountPercentage: null,
+      discountPercentage: 0,
       stock: undefined,
       categoryId: "",
       stateCode: "",
@@ -176,7 +176,7 @@ const CreateListing = () => {
       reset({
         name: editing.name,
         price: parseFloat(editing.price), // price comes as string per interface
-        discountPercentage: editing.discountPercentage ?? null,
+        discountPercentage: editing.discountPercentage ?? 0,
         stock: editing.stock ?? 0,
         categoryId: editing.categoryId ?? "",
         stateCode: editing.stateCode ?? "",
@@ -341,14 +341,22 @@ const CreateListing = () => {
             )}
           </div>
           <div>
-            <Label>Discount (%)</Label>
+            <Label>
+              Discount (%){" "}
+              <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                optional
+              </span>
+            </Label>
             <Input
               type="number"
               min={0}
               max={100}
               placeholder="0"
               className="h-12 mt-1"
-              {...register("discountPercentage", { valueAsNumber: true })}
+              {...register("discountPercentage", {
+                valueAsNumber: true,
+                setValueAs: (v) => (isNaN(v) ? 0 : v),
+              })}
             />
           </div>
         </div>
