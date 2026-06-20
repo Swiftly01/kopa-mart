@@ -115,7 +115,7 @@ export function PromotionBanner({
             className="flex items-center justify-center w-full gap-2 px-4 py-2.5 text-sm font-medium transition-opacity rounded-xl bg-success text-white hover:opacity-90"
           >
             <Download className="size-4" />
-            Download your free PDF
+            Download your free Ebook
           </a>
         )}
       </div>
@@ -179,7 +179,7 @@ export function PromotionBanner({
           ? "Claiming..."
           : !isAuthenticated
             ? "Sign in to claim"
-            : "Claim your free PDF"}
+            : "Claim your free Ebook"}
       </button>
     </div>
   );
@@ -194,7 +194,7 @@ function NotEligibleCard() {
           <XCircle className="size-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium">Free PDF Giveaway</p>
+          <p className="text-sm font-medium">Free Ebook Giveaway</p>
           <p className="text-xs text-muted-foreground">
             Sorry, this offer is only available to users who registered after
             launch.
@@ -252,7 +252,7 @@ function CountdownCard({
         </div>
         <div>
           <p className="text-sm font-semibold">
-            Free PDF Giveaway — First 50 Users
+            Free Ebook Giveaway — First 50 Users
           </p>
           <p className="text-xs text-muted-foreground">
             Launching Monday 12:00 PM · Be ready
