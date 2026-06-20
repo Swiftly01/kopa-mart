@@ -3,7 +3,7 @@ import useForgotPassword from "@/hooks/auth/mutations/useForgotPassword";
 import appToast from "@/lib/appToast";
 import { handleAxiosError } from "@/lib/utils/errors/errorHandler";
 import { AxiosError } from "axios";
-import { Mail } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function CheckEmailView() {
@@ -14,6 +14,8 @@ export default function CheckEmailView() {
   const { forgotPassword, isPending } = useForgotPassword();
 
   function handleResend() {
+    if (!email) return;
+
     forgotPassword(
       { email },
       {
@@ -62,10 +64,11 @@ export default function CheckEmailView() {
           Didn't get the email? Check spam or{" "}
           <button
             disabled={isPending}
-            className="text-primary font-medium"
-            onClick={() => handleResend}
+            onClick={handleResend}
+            className="text-primary font-medium inline-flex items-center gap-2 disabled:opacity-50"
           >
-            resend
+            {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isPending ? "Sending..." : "Resend"}
           </button>
         </p>
       </div>
