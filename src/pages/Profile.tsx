@@ -194,6 +194,8 @@ const Profile = () => {
       {(() => {
         const status = user.sellerOnboarding?.status;
 
+    
+
         switch (status) {
           case SellerVerificationStatusEnum.APPROVED:
             return (
@@ -332,7 +334,7 @@ const Profile = () => {
         }
       })()}
 
-      {(user.role === "buyer" || user.role === "admin") && (
+      {/* {(user.role === "buyer" || user.role === "admin") && (
         <Link
           to="/seller-onboarding/intro"
           className="flex items-center gap-3 p-4 card-listing"
@@ -347,7 +349,7 @@ const Profile = () => {
             </p>
           </div>
         </Link>
-      )}
+      )} */}
 
       {isAdmin(user) && (
         <Link
