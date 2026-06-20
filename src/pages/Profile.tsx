@@ -23,6 +23,7 @@ import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import EditProfileModal from "@/components/ui/editProfileModal";
 import { SellerVerificationStatusEnum } from "@/types/sellerOnboarding";
+import { PromotionBanner } from "@/components/promotionBanner";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // match backend limit
 
@@ -182,14 +183,14 @@ const Profile = () => {
         </div>
       </div>
 
-      
       <EditProfileModal
         open={editOpen}
         onClose={() => setEditOpen(false)}
         user={user}
       />
 
-     
+      <PromotionBanner isAuthenticated={!!user} userCreatedAt={user?.createdAt} />
+
       {(() => {
         const status = user.sellerOnboarding?.status;
 
@@ -413,5 +414,8 @@ const Profile = () => {
     </div>
   );
 };
+
+
+
 
 export default Profile;
