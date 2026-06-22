@@ -334,22 +334,22 @@ const Profile = () => {
         }
       })()}
 
-      {/* {(user.role === "buyer" || user.role === "admin") && (
+      
         <Link
-          to="/seller-onboarding/intro"
+          to=""
           className="flex items-center gap-3 p-4 card-listing"
         >
           <div className="flex items-center justify-center size-10 rounded-xl bg-primary/15 text-primary">
             <ShieldCheck className="size-5" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium">Become a Seller</p>
+            <p className="text-sm font-medium">Start job listing</p>
             <p className="text-xs text-muted-foreground">
-              For verified NYSC corps members
+              For  NYSC corps members
             </p>
           </div>
         </Link>
-      )} */}
+      
 
       {isAdmin(user) && (
         <Link
