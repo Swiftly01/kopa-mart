@@ -12,7 +12,9 @@ export class NotificationService {
   private static readonly baseUrl: string = `${apiBaseUrl}/api/v1/notifications`;
 
   static async getPreferences(): Promise<NotificationPreference> {
-    const response = await apiClient.get(`${this.baseUrl}/preferences`);
+    const response = await apiClient.get(
+      `${NotificationService.baseUrl}/preferences`,
+    );
 
     return response.data;
   }
@@ -20,29 +22,36 @@ export class NotificationService {
   static async updatePreference(
     dto: UpdateNotificationPreferenceDto,
   ): Promise<NotificationPreference> {
-    const { data } = await apiClient.patch(`${this.baseUrl}/preferences`, dto);
+    const { data } = await apiClient.patch(
+      `${NotificationService.baseUrl}/preferences`,
+      dto,
+    );
     return data;
   }
 
   static async registerDeviceToken(dto: RegisterDeviceTokenDto): Promise<void> {
-    await apiClient.post(`${this.baseUrl}/device-tokens`, dto);
+    await apiClient.post(`${NotificationService.baseUrl}/device-tokens`, dto);
   }
 
   static async deleteDeviceToken(token: string): Promise<void> {
     await apiClient.delete(
-      `/${this.baseUrl}/device-tokens/${encodeURIComponent(token)}`,
+      `/${NotificationService.baseUrl}/device-tokens/${encodeURIComponent(token)}`,
     );
   }
 
   static async getNotifications(
     params,
   ): Promise<PaginatedResponse<NotificationItem>> {
-    const { data } = await apiClient.get(`${this.baseUrl}`, { params });
+    const { data } = await apiClient.get(`${NotificationService.baseUrl}`, {
+      params,
+    });
     return data;
   }
 
   static async getNotification(id: string): Promise<NotificationItem> {
-    const { data } = await apiClient.get(`${this.baseUrl}/${id}`);
+    const { data } = await apiClient.get(
+      `${NotificationService.baseUrl}/${id}`,
+    );
     return data;
   }
 
