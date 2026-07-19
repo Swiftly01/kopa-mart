@@ -7,6 +7,7 @@ import useUpdateAvatar from "@/hooks/users/mutations/useUpdateAvatar";
 import appToast from "@/lib/appToast";
 import { isAdmin, isSuperAdmin } from "@/lib/utils/authRoles";
 import {
+  Bell,
   Camera,
   Download,
   LayoutDashboard,
@@ -24,8 +25,10 @@ import { Link, useNavigate } from "react-router-dom";
 import EditProfileModal from "@/components/ui/editProfileModal";
 import { SellerVerificationStatusEnum } from "@/types/sellerOnboarding";
 import { PromotionBanner } from "@/components/promotionBanner";
+import useNotificationPreferences from "@/hooks/notifications/queries/useNotificationPreferences";
+import NotificationPreferencesModal from "@/components/ui/NotificationPreferencesModal";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // match backend limit
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const StatusBadge = ({ status }: { status: string }) => {
   const map: Record<string, string> = {
@@ -52,6 +55,13 @@ const Profile = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const { data: notificationPreferences } = useNotificationPreferences();
+
+  const anyChannelEnabled =
+    !notificationPreferences ||
+    notificationPreferences.some((p) => p.enabled) ||
+    notificationPreferences.length === 0;
 
   function handleLogout() {
     logOut();
@@ -189,12 +199,42 @@ const Profile = () => {
         user={user}
       />
 
-      <PromotionBanner isAuthenticated={!!user} userCreatedAt={user?.createdAt} />
+      <PromotionBanner
+        isAuthenticated={!!user}
+        userCreatedAt={user?.createdAt}
+      />
+
+      <button
+        onClick={() => setNotificationsOpen(true)}
+        className="flex items-center w-full gap-3 p-4 text-left card-listing"
+      >
+        <div className="flex items-center justify-center size-10 rounded-xl bg-primary/15 text-primary">
+          <Bell className="size-5" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium">Notification Settings</p>
+          <p className="text-xs text-muted-foreground">
+            Email, SMS, and push preferences
+          </p>
+        </div>
+        <span
+          className={`text-xs px-2 py-1 rounded-full font-medium ${
+            anyChannelEnabled
+              ? "bg-success/15 text-success"
+              : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {anyChannelEnabled ? "On" : "Off"}
+        </span>
+      </button>
+
+      <NotificationPreferencesModal
+        open={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+      />
 
       {(() => {
         const status = user.sellerOnboarding?.status;
-
-    
 
         switch (status) {
           case SellerVerificationStatusEnum.APPROVED:
@@ -334,22 +374,17 @@ const Profile = () => {
         }
       })()}
 
-      
-        <Link
-          to=""
-          className="flex items-center gap-3 p-4 card-listing"
-        >
-          <div className="flex items-center justify-center size-10 rounded-xl bg-primary/15 text-primary">
-            <ShieldCheck className="size-5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium">Start job listing</p>
-            <p className="text-xs text-muted-foreground">
-              For  NYSC corps members
-            </p>
-          </div>
-        </Link>
-      
+      <Link to="" className="flex items-center gap-3 p-4 card-listing">
+        <div className="flex items-center justify-center size-10 rounded-xl bg-primary/15 text-primary">
+          <ShieldCheck className="size-5" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium">Start job listing</p>
+          <p className="text-xs text-muted-foreground">
+            For NYSC corps members
+          </p>
+        </div>
+      </Link>
 
       {isAdmin(user) && (
         <Link
@@ -416,8 +451,5 @@ const Profile = () => {
     </div>
   );
 };
-
-
-
 
 export default Profile;

@@ -1,6 +1,12 @@
 import { useMemo, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Loader2, Search, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import {
+  Bell,
+  Loader2,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
 import heroImg from "@/assets/hero.jpg";
@@ -12,6 +18,7 @@ import { FilterControls } from "@/components/ui/filterControls";
 import { ProductGrid } from "@/components/ui/productGrid";
 import { ITEMS_PER_PAGE } from "@/lib/utils/config";
 import { SellerCTA } from "@/components/ui/sellerCta";
+import NotificationBell from "@/components/ui/NotificationBell";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -69,39 +76,6 @@ const Index = () => {
 
   // Card entrance animations
   const gridRef = useRef<HTMLDivElement>(null);
-  // useEffect(() => {
-  //   if (!gridRef.current) return;
-  //   const observer = new IntersectionObserver(
-  //     (entries) => {
-  //       entries.forEach((entry) => {
-  //         if (entry.isIntersecting) {
-  //           const el = entry.target as HTMLElement;
-  //           el.classList.add("opacity-100");
-  //           el.classList.remove("opacity-0");
-  //           el.style.transform = "translate(0, 0)";
-  //           observer.unobserve(el);
-  //         }
-  //       });
-  //     },
-  //     { threshold: 0.05, rootMargin: "50px" },
-  //   );
-  //   const cards = gridRef.current.querySelectorAll(
-  //     ".listing-animate.opacity-0",
-  //   );
-  //   cards.forEach((card, index) => {
-  //     const el = card as HTMLElement;
-  //     el.style.transform =
-  //       index % 4 === 0
-  //         ? "translateY(2rem)"
-  //         : index % 4 === 1
-  //           ? "translateX(-2rem)"
-  //           : index % 4 === 2
-  //             ? "translateY(2rem)"
-  //             : "translateX(2rem)";
-  //     observer.observe(el);
-  //   });
-  //   return () => observer.disconnect();
-  // }, [products]);
 
   const { data: user } = useUser();
   const sellerStatus = user?.sellerOnboarding?.status ?? null;
@@ -163,21 +137,26 @@ const Index = () => {
               Sign in
             </Link>
           ) : (
-            <Link
-              to="/profile"
-              className="flex items-center justify-center overflow-hidden text-sm font-bold rounded-full shrink-0 size-9 bg-secondary text-secondary-foreground"
-            >
-              {user.profilePictureUrl ? (
-                <img
-                  src={user.profilePictureUrl}
-                  alt=""
-                  className="object-cover w-full h-full"
-                />
-              ) : (
-                user.firstName?.charAt(0).toUpperCase()
-              )}
-            </Link>
+           
+            <>
+              <NotificationBell />
+              <Link
+                to="/profile"
+                className="flex items-center justify-center overflow-hidden text-sm font-bold rounded-full shrink-0 size-9 bg-secondary text-secondary-foreground"
+              >
+                {user.profilePictureUrl ? (
+                  <img
+                    src={user.profilePictureUrl}
+                    alt=""
+                    className="object-cover w-full h-full"
+                  />
+                ) : (
+                  user.firstName?.charAt(0).toUpperCase()
+                )}
+              </Link>
+            </>
           )}
+          
         </div>
 
         {isMobile && showFilters && (

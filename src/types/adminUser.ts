@@ -7,6 +7,15 @@ export interface User {
   status: string;
   createdAt: string;
 }
+
+export interface AdminUserSummary {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  profilePictureUrl?: string | null;
+}
+
  
 export interface UserResponse {
   data: User[];

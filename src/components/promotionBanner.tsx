@@ -6,7 +6,7 @@ import { Download, Gift, Loader2, Lock, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const LAUNCH_DATE = new Date("2026-06-22T12:00:00"); // Monday 12:00 PM
+const LAUNCH_DATE = new Date("2026-06-22T11:00:00"); // Monday 12:00 PM
 
 function getTimeLeft() {
   const diff = LAUNCH_DATE.getTime() - Date.now();

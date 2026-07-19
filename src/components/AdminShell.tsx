@@ -8,6 +8,7 @@ import {
   Package,
   Settings as Cog,
   Loader2,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import useUser from "@/hooks/users/queries/useUser";
@@ -41,7 +42,7 @@ export const AdminShell = ({ children }: { children: ReactNode }) => {
     { to: "/admin/seller-verification", label: "Verify", icon: ShieldCheck },
     { to: "/admin/categories", label: "Categories", icon: ShieldCheck },
     ...(isAdmin(user)
-      ? [{ to: "/admin/settings", label: "Settings", icon: Cog }]
+      ? [{ to: "/admin/notifications", label: "Notifications", icon: Bell }]
       : []),
   ];
   return (

@@ -1,6 +1,7 @@
 import apiClient from "@/lib/utils/apiClient";
 import { apiBaseUrl } from "@/lib/utils/config";
-import { UserResponse } from "@/types/adminUser";
+import { AdminUserSummary, UserResponse } from "@/types/adminUser";
+import { PaginatedResponse } from "@/types/notification";
 import { User, UserRoleEnum } from "@/types/user";
 
 interface ChangeRoleResponse {
@@ -24,6 +25,16 @@ export class AdminUserService {
     return response.data;
   }
 
+  static async searchUsers(
+    search: string,
+    limit = 10,
+  ): Promise<PaginatedResponse<AdminUserSummary>> {
+    const { data } = await apiClient.get(`${apiBaseUrl}/api/v1/admin/users`, {
+      params: { search: search || undefined, page: 1, limit },
+    });
+    return data;
+  }
+
   static async getUserById(userId: string): Promise<User> {
     const response = await apiClient.get<{ data: { user: User } }>(
       `${apiBaseUrl}/api/v1/admin/users/${userId}`,
@@ -40,5 +51,4 @@ export class AdminUserService {
 
     return response.data.data.user;
   }
-
 }

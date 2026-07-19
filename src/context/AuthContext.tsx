@@ -41,6 +41,7 @@ function AuthProvider({
   );
 
   const logOut = (): void => {
+    localStorage.clear();
     setSession(null);
   };
 

@@ -1,0 +1,30 @@
+importScripts(
+  "https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js",
+);
+importScripts(
+  "https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js",
+);
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDrhQV6jIEIXOdvJe6G2KI-5Iau6kM1sfI",
+  authDomain: "kopamart-f6037.firebaseapp.com",
+  projectId: "kopamart-f6037",
+  storageBucket: "kopamart-f6037.firebasestorage.app",
+  messagingSenderId: "644397186180",
+  appId: "1:644397186180:web:b55bb8afff15f4b6d156d1",
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  self.registration.showNotification(
+    payload.notification?.title ?? "KopaMart",
+    {
+      body: payload.notification?.body,
+      icon: "/icons/icon-192.png",
+      data: payload.data,
+    },
+  );
+});

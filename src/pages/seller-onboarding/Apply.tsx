@@ -102,7 +102,7 @@ const Apply = () => {
     if (!file) return;
 
   
-    const MAX_FILE_SIZE = 2 * 1024 * 1024;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       setError(field, {
         type: "manual",
