@@ -56,6 +56,7 @@ export default function NotificationPermissionPrompt() {
     setIsRequestingPermission(true);
     try {
       const token = await requestPushToken();
+     
 
       if (!token) {
         appToast({
@@ -87,6 +88,7 @@ export default function NotificationPermissionPrompt() {
         },
       );
     } catch (error) {
+      console.log(error.response)
       console.error("Failed to enable notifications:", error);
 
       appToast({

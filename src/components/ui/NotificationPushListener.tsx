@@ -5,7 +5,7 @@ import { subscribeToForegroundMessages } from "@/lib/push/firebaseMessaging";
 
 import appToast from "@/lib/appToast";
 import { notificationKeys } from "@/hooks/notifications/notificationKey";
-import { NotificationService } from "@/services/notificationService";
+
 
 export default function NotificationPushListener() {
   const { data: user } = useUser();

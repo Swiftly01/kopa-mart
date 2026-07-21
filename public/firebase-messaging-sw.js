@@ -31,64 +31,64 @@ messaging.onBackgroundMessage((payload) => {
   );
 });
 
-self.addEventListener("notificationclick", (event) => {
-  console.log("Notification clicked, data:", event.notification.data);
-  event.notification.close();
+// self.addEventListener("notificationclick", (event) => {
+//   console.log("Notification clicked, data:", event.notification.data);
+//   event.notification.close();
 
-  const url = event.notification.data?.url || "https://kopamart.com";
-  console.log("Target URL:", url);
+//   const url = event.notification.data?.url || "https://kopamart.com";
+//   console.log("Target URL:", url);
 
-  event.waitUntil(
-    (async () => {
-      try {
-        const clientList = await clients.matchAll({
-          type: "window",
-          includeUncontrolled: true,
-        });
+//   event.waitUntil(
+//     (async () => {
+//       try {
+//         const clientList = await clients.matchAll({
+//           type: "window",
+//           includeUncontrolled: true,
+//         });
 
-        console.log("Found clients:", clientList.length);
+//         console.log("Found clients:", clientList.length);
 
-        for (const client of clientList) {
-          console.log("Client URL:", client.url);
-          if (client.url.startsWith(self.location.origin)) {
-            if (url.startsWith(self.location.origin)) {
-              try {
-                await client.navigate(url);
-                console.log("Navigated existing client");
-              } catch (navErr) {
-                console.error("navigate() failed:", navErr);
-              }
-            }
-            return client.focus();
-          }
-        }
+//         for (const client of clientList) {
+//           console.log("Client URL:", client.url);
+//           if (client.url.startsWith(self.location.origin)) {
+//             if (url.startsWith(self.location.origin)) {
+//               try {
+//                 await client.navigate(url);
+//                 console.log("Navigated existing client");
+//               } catch (navErr) {
+//                 console.error("navigate() failed:", navErr);
+//               }
+//             }
+//             return client.focus();
+//           }
+//         }
 
-        console.log("No existing client, opening new window");
-        return await clients.openWindow(url);
-      } catch (err) {
-        console.error("notificationclick handler error:", err);
-      }
-    })(),
-  );
-});
-
-// self.addEventListener('push', function(event) {
-//     console.log('Received a push message', event.data.json());
-
-//     // convert string to JSON
-//     const data = event.data.json();
-//     const title = data.title;
-    
-//     const options = {
-//         body: data.body,
-//         icon: data.icon,
-//         data : {
-//             url : data.url
-//         },
-//     };
-//     event.waitUntil(self.registration.showNotification(title, options));
+//         console.log("No existing client, opening new window");
+//         return await clients.openWindow(url);
+//       } catch (err) {
+//         console.error("notificationclick handler error:", err);
+//       }
+//     })(),
+//   );
 // });
 
-// self.addEventListener('notificationclick', function(event) {
-//     clients.openWindow(event.notification.data.url);
-// }, false);
+self.addEventListener('push', function(event) {
+    console.log('Received a push message', event.data.json());
+
+    // convert string to JSON
+    const data = event.data.json();
+    const title = data.title;
+    
+    const options = {
+        body: data.body,
+        icon: data.icon,
+        data : {
+            url : data.url
+        },
+    };
+    event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', function(event) {
+    clients.openWindow(event.notification.data.url);
+}, false);
