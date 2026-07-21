@@ -31,47 +31,34 @@ messaging.onBackgroundMessage((payload) => {
   );
 });
 
+// self.addEventListener("notificationclick", (event) => {
+//   event.notification.close();
+
+//   const url = event.notification.data?.url || "https://kopamart.com";
+
+//   event.waitUntil(
+//     (async () => {
+//       const windowClients = await clients.matchAll({
+//         type: "window",
+//         includeUncontrolled: true,
+//       });
+
+//       for (const client of windowClients) {
+//         if (client.url.startsWith(self.location.origin)) {
+//           await client.navigate(url);
+//           return client.focus();
+//         }
+//       }
+
+//       return clients.openWindow(url);
+//     })(),
+//   );
+// });
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const url = event.notification.data?.url || "https://kopamart.com";
 
-  event.waitUntil(
-    (async () => {
-      const windowClients = await clients.matchAll({
-        type: "window",
-        includeUncontrolled: true,
-      });
-
-      for (const client of windowClients) {
-        if (client.url.startsWith(self.location.origin)) {
-          await client.navigate(url);
-          return client.focus();
-        }
-      }
-
-      return clients.openWindow(url);
-    })(),
-  );
+  event.waitUntil(clients.openWindow(url));
 });
-
-// self.addEventListener('push', function(event) {
-//     console.log('Received a push message', event.data.json());
-
-//     // convert string to JSON
-//     const data = event.data.json();
-//     const title = data.title;
-    
-//     const options = {
-//         body: data.body,
-//         icon: data.icon,
-//         data : {
-//             url : data.url
-//         },
-//     };
-//     event.waitUntil(self.registration.showNotification(title, options));
-// });
-
-// self.addEventListener('notificationclick', function(event) {
-//     clients.openWindow(event.notification.data.url);
-// }, false);
