@@ -25,7 +25,7 @@ messaging.onBackgroundMessage((payload) => {
     payload.notification?.title ?? "KopaMart",
     {
       body: payload.notification?.body,
-      icon: "https://res.cloudinary.com/dgecvdtih/image/upload/v1784708013/pwa-192_nqahmm.jpg",
+      icon: "/icons/icon-192.png",
       data: payload.data,
     },
   );
