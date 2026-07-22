@@ -25,35 +25,13 @@ messaging.onBackgroundMessage((payload) => {
     payload.notification?.title ?? "KopaMart",
     {
       body: payload.notification?.body,
-      icon: "/icons/icon-192.png",
+      icon: "https://res.cloudinary.com/dgecvdtih/image/upload/v1784708013/pwa-192_nqahmm.jpg",
       data: payload.data,
     },
   );
 });
 
-// self.addEventListener("notificationclick", (event) => {
-//   event.notification.close();
 
-//   const url = event.notification.data?.url || "https://kopamart.com";
-
-//   event.waitUntil(
-//     (async () => {
-//       const windowClients = await clients.matchAll({
-//         type: "window",
-//         includeUncontrolled: true,
-//       });
-
-//       for (const client of windowClients) {
-//         if (client.url.startsWith(self.location.origin)) {
-//           await client.navigate(url);
-//           return client.focus();
-//         }
-//       }
-
-//       return clients.openWindow(url);
-//     })(),
-//   );
-// });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
