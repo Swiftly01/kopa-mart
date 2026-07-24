@@ -21,9 +21,11 @@ export interface InitSellerOnboardingResponse {
 }
 
 export enum SellerVerificationStatusEnum {
-  NOT_STARTED = 'not_stated',
-  IN_PROGRESS = 'in_progress',
-  PENDING_REVIEW = 'pending_review',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
+  NOT_STARTED = "not_stated",
+  IN_PROGRESS = "in_progress",
+  PENDING_REVIEW = "pending_review",
+  APPROVED = "approved",
+  REJECTED = "rejected",
 }
+
+export const MAX_FILE_SIZE = 5 * 1024 * 1024;

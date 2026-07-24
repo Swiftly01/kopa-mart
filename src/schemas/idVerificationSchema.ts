@@ -1,6 +1,17 @@
+
+import { MAX_FILE_SIZE } from "@/types/sellerOnboarding";
 import { z } from "zod";
 
-const MAX_FILE_SIZE = 1 * 1024 * 1024;
+const maxSizeMB = MAX_FILE_SIZE / (1024 * 1024);
+
+const idImageSchema = (label: "Front" | "Back") =>
+  z
+    .instanceof(File, {
+      message: `Please upload a photo of the ${label.toLowerCase()} of your ID`,
+    })
+    .refine((file) => file.size <= MAX_FILE_SIZE, {
+      message: `${label} image must be less than ${maxSizeMB}MB`,
+    });
 
 export const idVerificationSchema = z.object({
   fullName: z.string().min(2).max(80),
@@ -17,19 +28,9 @@ export const idVerificationSchema = z.object({
 
   idNumber: z.string().min(2),
 
-  idFront: z
-    .instanceof(File)
-    .refine((file) => file.size <= MAX_FILE_SIZE, {
-      message: "Front image must be less than 1MB",
-    }),
+  idFront: idImageSchema("Front"),
 
-  idBack: z
-    .instanceof(File)
-    .refine((file) => file.size <= MAX_FILE_SIZE, {
-      message: "Back image must be less than 1MB",
-    }),
+  idBack: idImageSchema("Back"),
 });
 
-export type IdVerificationSchema = z.infer<
-  typeof idVerificationSchema
->;
+export type IdVerificationSchema = z.infer<typeof idVerificationSchema>;

@@ -19,9 +19,11 @@ import {
   idVerificationSchema,
   IdVerificationSchema,
 } from "@/schemas/idVerificationSchema";
+import { MAX_FILE_SIZE } from "@/types/sellerOnboarding";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
-import { AlertTriangle, Lightbulb, Upload } from "lucide-react";
+import { AlertTriangle, Lightbulb, Upload, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -66,6 +68,33 @@ const Apply = () => {
 
   const { mutate: submitId, isPending } = useSubmitIdVerification();
 
+  const [previews, setPreviews] = useState<
+    Record<"idFront" | "idBack", string | null>
+  >({
+    idFront: null,
+    idBack: null,
+  });
+
+  useEffect(() => {
+    if (frontFile) {
+      const url = URL.createObjectURL(frontFile);
+      setPreviews((p) => ({ ...p, idFront: url }));
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviews((p) => ({ ...p, idFront: null }));
+    }
+  }, [frontFile]);
+
+  useEffect(() => {
+    if (backFile) {
+      const url = URL.createObjectURL(backFile);
+      setPreviews((p) => ({ ...p, idBack: url }));
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviews((p) => ({ ...p, idBack: null }));
+    }
+  }, [backFile]);
+
   function onSubmit(data: IdVerificationSchema) {
     const formData = new FormData();
 
@@ -95,24 +124,40 @@ const Apply = () => {
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    field: "idFront" | "idBack"
+    field: "idFront" | "idBack",
   ) => {
     const file = e.target.files?.[0];
 
-    if (!file) return;
-
-  
-    const MAX_FILE_SIZE = 5 * 1024 * 1024;
-    if (file.size > MAX_FILE_SIZE) {
-      setError(field, {
-        type: "manual",
-        message: `${field === "idFront" ? "Front" : "Back"} image must be less than 1MB`,
+    if (!file) {
+      setValue(field, undefined, {
+        shouldValidate: true,
+        shouldDirty: true,
       });
       return;
     }
 
-    // Set the file value
+   
+    if (file.size > MAX_FILE_SIZE) {
+      setError(field, {
+        type: "manual",
+        message: `${field === "idFront" ? "Front" : "Back"} image must be less than 5MB`,
+      });
+      setValue(field, undefined, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      e.target.value = ""; 
+      return;
+    }
+
     setValue(field, file, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const handleRemoveFile = (field: "idFront" | "idBack") => {
+    setValue(field, undefined, {
       shouldValidate: true,
       shouldDirty: true,
     });
@@ -161,7 +206,7 @@ const Apply = () => {
           <div className="flex items-center gap-2 p-2 border rounded-lg bg-warning/10 border-warning/20">
             <AlertTriangle className="size-4 text-warning shrink-0" />
             <p className="text-[11px] text-muted-foreground">
-              <strong>Max 2MB per image.</strong> Compress or resize before
+              <strong>Max 5MB per image.</strong> Compress or resize before
               uploading.
             </p>
           </div>
@@ -179,38 +224,51 @@ const Apply = () => {
                 field: "idBack" as const,
               },
             ].map((item, i) => {
-              const preview = item.file ? URL.createObjectURL(item.file) : null;
+              const preview = previews[item.field];
               const fieldError = errors[item.field];
 
               return (
                 <div key={i} className="space-y-1">
-                  <label className="aspect-[5/3] rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1.5 text-muted-foreground cursor-pointer hover:border-primary hover:text-primary transition-colors overflow-hidden bg-secondary/40">
-                    {preview ? (
-                      <img
-                        src={preview}
-                        alt={item.label}
-                        className="object-cover w-full h-full"
+                  <div className="relative">
+                    <label className="aspect-[5/3] rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1.5 text-muted-foreground cursor-pointer hover:border-primary hover:text-primary transition-colors overflow-hidden bg-secondary/40">
+                      {preview ? (
+                        <img
+                          src={preview}
+                          alt={item.label}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-center rounded-lg size-8 bg-background">
+                            <Upload className="size-4" />
+                          </div>
+                          <span className="text-xs font-medium">
+                            {item.label}
+                          </span>
+                          <span className="text-[10px]">
+                            Click to upload (max 5MB)
+                          </span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleFileChange(e, item.field)}
                       />
-                    ) : (
-                      <>
-                        <div className="flex items-center justify-center rounded-lg size-8 bg-background">
-                          <Upload className="size-4" />
-                        </div>
-                        <span className="text-xs font-medium">
-                          {item.label}
-                        </span>
-                        <span className="text-[10px]">
-                          Click to upload (max 2MB)
-                        </span>
-                      </>
+                    </label>
+
+                    {preview && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(item.field)}
+                        className="absolute top-1.5 right-1.5 flex items-center justify-center rounded-full size-6 bg-black/60 text-white hover:bg-black/80 transition-colors"
+                        aria-label={`Remove ${item.label}`}
+                      >
+                        <X className="size-3.5" />
+                      </button>
                     )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleFileChange(e, item.field)}
-                    />
-                  </label>
+                  </div>
                   {fieldError && (
                     <p className="mt-1 text-xs text-red-500">
                       {fieldError.message}
@@ -259,7 +317,7 @@ const Apply = () => {
                     value={selectedStateCode || ""}
                     onValueChange={(value) => {
                       const selectedState = states.find(
-                        (s) => s.code === value
+                        (s) => s.code === value,
                       );
 
                       setValue("stateCode", value, {
@@ -401,8 +459,8 @@ const Apply = () => {
               — Do not crop or cut off the edges.
             </li>
             <li>
-              ✓ <span className="font-medium text-foreground">Max 1MB</span> —
-              Keep files under 1MB for fast upload.
+              ✓ <span className="font-medium text-foreground">Max 5MB</span> —
+              Keep files under 5MB for fast upload.
             </li>
           </ul>
           <p className="text-[10px] text-muted-foreground border-t border-border pt-2">
