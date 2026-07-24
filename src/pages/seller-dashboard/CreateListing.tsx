@@ -32,7 +32,7 @@ import useGetProduct from "@/hooks/products/queries/useGetProduct";
 import type { ProductImage } from "@/types/product"; // adjust path as needed
 import useDeleteProductImage from "@/hooks/products/mutations/useDeleteProductImage";
 
-const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
+const MAX_FILE_SIZE = 4 * 1024 * 1024; // 1 MB
 const MAX_IMAGES = 6;
 
 const ProductCondition = z.enum(["new", "like_new", "good", "fair"]);
