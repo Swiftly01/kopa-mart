@@ -53,7 +53,8 @@ export default function useUpdateNotificationPreference() {
 
     onSuccess: () => {
       appToast({
-        title: "Notification preferences updated successfully",
+        title: "Notification",
+        description: "Notification preferences updated successfully",
       });
     },
     onError: (err: AxiosError, dto, context) => {

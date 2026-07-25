@@ -53,7 +53,8 @@ export default function useDeleteNotification() {
 
     onSuccess: () => {
       appToast({
-        title: "Notification deleted successfully",
+        title: "Notification",
+        description: "Notification deleted successfully",
       });
     },
 

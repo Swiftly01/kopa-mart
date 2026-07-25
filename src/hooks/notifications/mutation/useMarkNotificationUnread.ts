@@ -56,7 +56,8 @@ export default function useMarkNotificationUnread() {
 
     onSuccess: () => {
       appToast({
-        title: "Notification marked as unread successfully",
+        title: "Notification",
+        description: "Notification marked as unread successfully"
       });
     },
 

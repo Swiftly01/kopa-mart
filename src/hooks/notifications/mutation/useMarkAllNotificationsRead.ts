@@ -56,7 +56,8 @@ export default function useMarkAllNotificationsRead() {
 
     onSuccess: () => {
       appToast({
-        title: " All notification marked as read successfully",
+        title: "Notification",
+        description: "All notification marked as read successfully"
       });
     },
 

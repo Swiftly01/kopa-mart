@@ -21,7 +21,7 @@ import { ITEMS_PER_PAGE } from "@/lib/utils/config";
 import { handleAxiosError } from "@/lib/utils/errors/errorHandler";
 import { cn } from "@/lib/utils/utils";
 import { Product, type FilterState } from "@/types/product";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import {
   AlertCircle,
@@ -36,8 +36,6 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-
-
 
 const DEFAULT_FILTERS: FilterState = {
   stateName: "",
@@ -62,6 +60,7 @@ const ManageListings = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const queryClient = useQueryClient();
 
   // Debounce search so we don't fire on every keystroke
   const searchTimeout = useState<ReturnType<typeof setTimeout> | null>(null);
@@ -75,13 +74,13 @@ const ManageListings = () => {
       }, 400),
     );
   };
-   
+
   const queryParams = useMemo(
     () => ({
       page: currentPage,
       limit: ITEMS_PER_PAGE,
 
-     // sellerId,
+      // sellerId,
 
       ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
 
@@ -101,7 +100,7 @@ const ManageListings = () => {
     [currentPage, debouncedSearch, filters],
   );
 
-  const { data, isLoading, isError, isFetching } =
+  const { data, isLoading, isError, isFetching, refetch } =
     useGetSellerProducts(queryParams);
 
   const products = useMemo(() => data?.data ?? [], [data]);
@@ -138,6 +137,8 @@ const ManageListings = () => {
       { productId: selectedProduct.id },
       {
         onSuccess: () => {
+          // queryClient.invalidateQueries({ queryKey: ["seller-products"] });
+          refetch();
           appToast({
             title: "Delete Product",
             description: "Product removed successfully",
@@ -448,7 +449,7 @@ const ManageListings = () => {
         open={deleteOpen}
         onClose={closeDeleteModal}
         onConfirm={handleDelete}
-        isPending={false}
+        isPending={deleteMutation.isPending}
       />
     </SellerShell>
   );
