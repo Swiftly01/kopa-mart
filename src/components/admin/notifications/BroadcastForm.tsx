@@ -12,12 +12,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import UserPicker from "./UserPicker";
+import RecipientBatchPicker from "./RecipientBatchPicker";
 import useBroadcastNotification from "@/hooks/admin/notifications/mutations/useBroadcastNotification";
 import useEstimateBroadcastAudience from "@/hooks/admin/notifications/queries/useEstimateBroadcastAudience";
 import { NotificationChannel, NotificationType } from "@/types/notification";
 import {
+  BatchFeature,
   BroadcastAudience,
+  BroadcastResult,
+  MAX_BATCH_RECIPIENTS,
   NotificationPriority,
 } from "@/types/adminNotification";
 
@@ -73,7 +76,7 @@ export default function BroadcastForm() {
   );
   const [scheduledFor, setScheduledFor] = useState("");
   const [confirming, setConfirming] = useState(false);
-  const [totalQueued, setTotalQueued] = useState<number | null>(null);
+  const [lastResult, setLastResult] = useState<BroadcastResult | null>(null);
 
   const { mutate: broadcast, isPending } = useBroadcastNotification();
 
@@ -104,6 +107,14 @@ export default function BroadcastForm() {
       selectedUserIds.length === 0
     ) {
       return "Select at least one recipient, or switch to 'All Users'.";
+    }
+    // The picker itself won't let you select more than this, but guard
+    // here too in case selections were built up before hitting the cap.
+    if (
+      audience === BroadcastAudience.SPECIFIC &&
+      selectedUserIds.length > MAX_BATCH_RECIPIENTS
+    ) {
+      return `Only ${MAX_BATCH_RECIPIENTS} users can be sent to at a time.`;
     }
     return null;
   };
@@ -140,11 +151,18 @@ export default function BroadcastForm() {
       },
       {
         onSuccess: (result) => {
-          setTotalQueued(result.totalQueued);
+          setLastResult(result);
           setConfirming(false);
           appToast({
             title: `Broadcast queued for ${result.totalQueued} user(s)`,
           });
+          // Clear the selection after a successful specific-audience send —
+          // those users are now part of the active batch (marked "Already
+          // sent" in the picker), so keeping them checked would just
+          // invite an accidental re-select.
+          if (audience === BroadcastAudience.SPECIFIC) {
+            setSelectedUserIds([]);
+          }
         },
         onError: (err: any) => {
           setConfirming(false);
@@ -231,7 +249,8 @@ export default function BroadcastForm() {
       )}
 
       {audience === BroadcastAudience.SPECIFIC && (
-        <UserPicker
+        <RecipientBatchPicker
+          feature={BatchFeature.BROADCAST}
           selectedIds={selectedUserIds}
           onChange={setSelectedUserIds}
         />
@@ -392,13 +411,21 @@ export default function BroadcastForm() {
         </div>
       )}
 
-      {totalQueued !== null && !confirming && (
-        <div className="p-4 border rounded-lg border-border bg-secondary/30">
+      {lastResult && !confirming && (
+        <div className="p-4 space-y-1.5 border rounded-lg border-border bg-secondary/30">
           <p className="text-sm">
-            Queued for <span className="font-medium">{totalQueued}</span>{" "}
+            Queued for{" "}
+            <span className="font-medium">{lastResult.totalQueued}</span>{" "}
             user(s). Delivery happens asynchronously — check the Dead Letter
             Queue tab for any that fail.
           </p>
+          {lastResult.batchId && (
+            <p className="text-xs text-muted-foreground">
+              Batch <span className="font-mono">{lastResult.batchId}</span>{" "}
+              tracked for the next hour — select a different set of users
+              above to send the next batch.
+            </p>
+          )}
         </div>
       )}
     </div>

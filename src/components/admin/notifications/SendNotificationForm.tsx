@@ -12,11 +12,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import RecipientBatchPicker from "./RecipientBatchPicker";
 import useSendNotification from "@/hooks/admin/notifications/mutations/useSendNotification";
-import useSendBulkNotifications from "@/hooks/admin/notifications/mutations/useSendBulkNotifications";
+import useSendNotificationBatch from "@/hooks/admin/notifications/mutations/useSendNotificationBatch";
 import { NotificationChannel, NotificationType } from "@/types/notification";
 import {
+  BatchFeature,
+  MAX_BATCH_RECIPIENTS,
   NotificationPriority,
+  RecipientBatchSendResult,
   SendNotificationResult,
 } from "@/types/adminNotification";
 import appToast from "@/lib/appToast";
@@ -43,8 +47,9 @@ const PRIORITY_LABELS: Record<NotificationPriority, string> = {
 const ALL_CHANNELS = Object.values(NotificationChannel);
 
 export default function SendNotificationForm() {
-  const [isBulk, setIsBulk] = useState(false);
-  const [userIdInput, setUserIdInput] = useState(""); // single id, or newline-separated in bulk mode
+  const [isBatch, setIsBatch] = useState(false);
+  const [userId, setUserId] = useState(""); // single-recipient mode only
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]); // batch mode
   const [type, setType] = useState<NotificationType>(NotificationType.GENERIC);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -55,14 +60,14 @@ export default function SendNotificationForm() {
   const [scheduledFor, setScheduledFor] = useState("");
 
   const [lastResult, setLastResult] = useState<
-    SendNotificationResult | { queuedCount: number } | null
+    SendNotificationResult | RecipientBatchSendResult | null
   >(null);
 
   const { mutate: send, isPending: isSending } = useSendNotification();
-  const { mutate: sendBulk, isPending: isBulkSending } =
-    useSendBulkNotifications();
+  const { mutate: sendBatch, isPending: isBatchSending } =
+    useSendNotificationBatch();
 
-  const isPending = isSending || isBulkSending;
+  const isPending = isSending || isBatchSending;
 
   const toggleChannel = (channel: NotificationChannel) => {
     setSelectedChannels((prev) =>
@@ -97,32 +102,42 @@ export default function SendNotificationForm() {
       return;
     }
 
-    if (isBulk) {
-      const userIds = userIdInput
-        .split("\n")
-        .map((id) => id.trim())
-        .filter(Boolean);
-
-      if (userIds.length === 0) {
+    if (isBatch) {
+      if (selectedUserIds.length === 0) {
         appToast({
-          title: "Add at least one user ID",
-          description: "One per line.",
+          title: "Select at least one recipient",
           variant: "destructive",
         });
         return;
       }
 
-      sendBulk(
-        userIds.map((userId) => ({ userId, ...buildBaseDto() })),
+      // The picker itself won't let this happen, but guard defensively —
+      // the server rejects >100 recipients regardless.
+      if (selectedUserIds.length > MAX_BATCH_RECIPIENTS) {
+        appToast({
+          title: `Only ${MAX_BATCH_RECIPIENTS} users can be sent to at a time`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      sendBatch(
+        { userIds: selectedUserIds, ...buildBaseDto() },
         {
-          onSuccess: (results) => {
-            setLastResult({ queuedCount: results.length });
-            appToast({ title: `Queued for ${results.length} user(s)` });
-          },
-          onError: () =>
+          onSuccess: (result) => {
+            setLastResult(result);
             appToast({
-              title: "Bulk send failed",
-              description: "Please try again.",
+              title: `Queued for ${result.totalQueued} user(s)`,
+            });
+            // These users are now part of the active batch (marked
+            // "Already sent" in the picker) — clear the selection so the
+            // admin picks a fresh set for the next batch.
+            setSelectedUserIds([]);
+          },
+          onError: (err: any) =>
+            appToast({
+              title: "Batch send failed",
+              description: err?.response?.data?.message ?? "Please try again.",
               variant: "destructive",
             }),
         },
@@ -130,14 +145,14 @@ export default function SendNotificationForm() {
       return;
     }
 
-    const userId = userIdInput.trim();
-    if (!userId) {
+    const trimmedUserId = userId.trim();
+    if (!trimmedUserId) {
       appToast({ title: "User ID is required", variant: "destructive" });
       return;
     }
 
     send(
-      { userId, ...buildBaseDto() },
+      { userId: trimmedUserId, ...buildBaseDto() },
       {
         onSuccess: (result) => {
           setLastResult(result);
@@ -161,40 +176,38 @@ export default function SendNotificationForm() {
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Bulk toggle */}
+        {/* Mode toggle */}
         <button
           type="button"
-          onClick={() => setIsBulk((v) => !v)}
+          onClick={() => setIsBatch((v) => !v)}
           className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground"
         >
           <Users className="size-3.5" />
-          {isBulk ? "Switch to single recipient" : "Switch to multiple recipients"}
+          {isBatch ? "Switch to single recipient" : "Switch to multiple recipients"}
         </button>
 
         {/* Recipient(s) */}
-        <div className="space-y-1">
-          <Label htmlFor="userId">
-            {isBulk ? "User IDs (one per line)" : "User ID"}
-          </Label>
-          {isBulk ? (
-            <Textarea
-              id="userId"
-              rows={4}
-              placeholder={"9f2c1a...\nb7e4d0...\n..."}
-              value={userIdInput}
-              onChange={(e) => setUserIdInput(e.target.value)}
-              className="font-mono text-xs"
+        {isBatch ? (
+          <div className="space-y-1">
+            <Label>Recipients</Label>
+            <RecipientBatchPicker
+              feature={BatchFeature.NOTIFICATION}
+              selectedIds={selectedUserIds}
+              onChange={setSelectedUserIds}
             />
-          ) : (
+          </div>
+        ) : (
+          <div className="space-y-1">
+            <Label htmlFor="userId">User ID</Label>
             <Input
               id="userId"
               placeholder="User UUID"
-              value={userIdInput}
-              onChange={(e) => setUserIdInput(e.target.value)}
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
               className="font-mono text-xs"
             />
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Type + Priority */}
         <div className="grid grid-cols-2 gap-3">
@@ -299,7 +312,9 @@ export default function SendNotificationForm() {
           ) : (
             <Send className="size-4" />
           )}
-          {isBulk ? "Send to all" : "Send"}
+          {isBatch
+            ? `Send to ${selectedUserIds.length || 0} selected`
+            : "Send"}
         </Button>
       </form>
 
@@ -309,10 +324,17 @@ export default function SendNotificationForm() {
           <p className="text-xs font-semibold tracking-wide uppercase text-muted-foreground">
             Result
           </p>
-          {"queuedCount" in lastResult ? (
-            <p className="text-sm">
-              Queued for {lastResult.queuedCount} user(s).
-            </p>
+          {"totalQueued" in lastResult ? (
+            <div className="space-y-1">
+              <p className="text-sm">
+                Queued for {lastResult.totalQueued} user(s).
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Batch <span className="font-mono">{lastResult.batchId}</span>{" "}
+                tracked for the next hour — select a different set of users
+                above to send the next batch.
+              </p>
+            </div>
           ) : lastResult.mode === "queued" ? (
             <p className="text-sm">
               Queued (request id:{" "}

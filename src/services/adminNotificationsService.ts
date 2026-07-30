@@ -2,9 +2,15 @@ import apiClient from "@/lib/utils/apiClient";
 import { apiBaseUrl } from "@/lib/utils/config";
 import {
   AudienceEstimateParams,
+  BatchFeature,
   BroadcastNotificationDto,
   BroadcastResult,
   DeadLetterNotification,
+  RecipientBatch,
+  RecipientBatchSendResult,
+  RecipientSearchParams,
+  RecipientSearchResult,
+  SendNotificationBatchDto,
   SendNotificationDto,
   SendNotificationResult,
   TestNotificationDto,
@@ -25,6 +31,14 @@ export class adminNotificationsService {
     const { data } = await apiClient.post(`${this.baseUrl}/bulk`, {
       notifications,
     });
+    return data;
+  }
+
+  /** Send one message to an admin-selected batch of up to 100 users. */
+  static async sendBatch(
+    dto: SendNotificationBatchDto,
+  ): Promise<RecipientBatchSendResult> {
+    const { data } = await apiClient.post(`${this.baseUrl}/send/batch`, dto);
     return data;
   }
 
@@ -64,6 +78,33 @@ export class adminNotificationsService {
         userIds: params.userIds?.join(","),
         roleFilter: params.roleFilter,
       },
+    });
+    return data;
+  }
+
+  /** Searchable, paginated recipient picker shared by Send Notification & Broadcast. */
+  static async searchRecipients(
+    params: RecipientSearchParams,
+  ): Promise<RecipientSearchResult> {
+    
+    const { data } = await apiClient.get(`${this.baseUrl}/recipients`, {
+      params: {
+        feature: params.feature,
+        search: params.search || undefined,
+        page: params.page ?? 1,
+        limit: params.limit ?? 10,
+        role: params.role,
+      },
+    });
+    return data;
+  }
+
+ 
+  static async getActiveBatches(
+    feature: BatchFeature,
+  ): Promise<RecipientBatch[]> {
+    const { data } = await apiClient.get(`${this.baseUrl}/batches`, {
+      params: { feature },
     });
     return data;
   }
