@@ -1,8 +1,9 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Home, Heart, Plus, User, Moon, Sun } from "lucide-react";
+import { Home, Heart, Plus, User, Moon, Sun, MessageCircle } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { cn } from "@/lib/utils/utils";
 import useUser from "@/hooks/users/queries/useUser";
+import useUnreadMessages from "@/hooks/messages/queries/useUnreadMessages";
 import { SellerVerificationStatusEnum } from "@/types/adminSellerVerification";
 import { UserRoleEnum } from "@/types/user";
 
@@ -10,6 +11,8 @@ export const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: user } = useUser();
+  const { data: unreadRows } = useUnreadMessages();
+  const totalUnread = unreadRows?.reduce((sum, row) => sum + row.unreadCount, 0) ?? 0;
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
 
@@ -41,7 +44,8 @@ export const BottomNav = () => {
 
   const items = [
     { to: "/", label: "Home", icon: Home },
-    { to: "/saved", label: "Saved", icon: Heart },
+    { to: "/messages", label: "Messages", icon: MessageCircle, badge: totalUnread },
+  //  { to: "/saved", label: "Saved", icon: Heart },
     { sell: true, label: "Sell", icon: Plus },
     {
       action: () => setTheme(theme === "dark" ? "light" : "dark"),
@@ -56,7 +60,7 @@ export const BottomNav = () => {
       className="fixed bottom-0 inset-x-0 z-50 border-t border-border bg-background/95 backdrop-blur-lg pb-[env(safe-area-inset-bottom)]"
       aria-label="Primary"
     >
-      <ul className="grid max-w-2xl grid-cols-5 mx-auto">
+      <ul className="grid max-w-2xl grid-cols-6 mx-auto">
         {items.map((it, i) => {
           const Icon = it.icon;
           if ("sell" in it) {
@@ -97,7 +101,14 @@ export const BottomNav = () => {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className={cn("size-5", active && "fill-primary/15")} />
+                <span className="relative">
+                  <Icon className={cn("size-5", active && "fill-primary/15")} />
+                  {"badge" in it && it.badge > 0 && (
+                    <span className="absolute -top-1.5 -right-2 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold leading-none">
+                      {it.badge > 99 ? "99+" : it.badge}
+                    </span>
+                  )}
+                </span>
                 <span className="text-[10px] font-medium">{it.label}</span>
               </NavLink>
             </li>

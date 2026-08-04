@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   MapPin,
@@ -9,12 +9,18 @@ import {
 } from "lucide-react";
 import useGetProductsInfinite from "@/hooks/products/queries/useGetProductsInfinite";
 import { ProductGrid } from "@/components/ui/productGrid";
+import { StarRating } from "@/components/ui/starRating";
 import useGetSellerProductsInfinite from "@/hooks/seller/queries/useGetSellerProductsInfinite";
+import useUser from "@/hooks/users/queries/useUser";
+import useCreateConversation from "@/hooks/chat/mutations/useCreateConversation";
 
 const ITEMS_PER_PAGE = 10;
 
 const SellerProfile = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { data: currentUser } = useUser();
+  const createConversation = useCreateConversation();
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useGetSellerProductsInfinite({ limit: ITEMS_PER_PAGE, sellerId: id! });
 
@@ -90,7 +96,6 @@ const SellerProfile = () => {
     ? `${firstProduct.lgaName}, ${firstProduct.stateName}`
     : "";
   const verified = seller?.status === "active";
-  const wa = phone.replace(/[^\d]/g, "");
 
   // ── Not found (finished loading, still no products & no seller) ────────────
   if (!isLoading && products.length === 0) {
@@ -134,6 +139,16 @@ const SellerProfile = () => {
               Verified NYSC Seller
             </span>
           )}
+          {!!seller?.sellerReviewCount && (
+            <div className="mt-1.5">
+              <StarRating
+                value={seller.sellerAverageRating ?? 0}
+                showValue
+                reviewCount={seller.sellerReviewCount}
+                size="xs"
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -147,15 +162,22 @@ const SellerProfile = () => {
             Call
           </a>
 
-          <a
-            href={`https://wa.me/${wa}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center flex-1 gap-2 font-medium h-11 rounded-2xl bg-gradient-primary text-primary-foreground"
+          <button
+            type="button"
+            onClick={() => {
+              if (!currentUser) return navigate("/login");
+              if (!id) return;
+              createConversation.mutate(
+                { participantIds: [id] },
+                { onSuccess: (conversation) => navigate(`/messages/${conversation.id}`) },
+              );
+            }}
+            disabled={createConversation.isPending}
+            className="flex items-center justify-center flex-1 gap-2 font-medium h-11 rounded-2xl bg-gradient-primary text-primary-foreground disabled:opacity-60"
           >
             <MessageCircle className="size-4" />
-            WhatsApp
-          </a>
+            Message
+          </button>
         </div>
       )}
       {/* ── Listings with infinite scroll ── */}

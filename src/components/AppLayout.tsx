@@ -6,7 +6,12 @@ import { useStore } from "@/store/useStore";
 export const AppLayout = ({ children }: { children: ReactNode }) => {
   const { pathname } = useLocation();
   const touch = useStore((s) => s.touchActivity);
-  const hideNav = pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith("/forgot") || pathname.startsWith("/verify-email");
+  const hideNav =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/signup") ||
+    pathname.startsWith("/forgot") ||
+    pathname.startsWith("/verify-email") ||
+    /^\/messages\/.+/.test(pathname);
 
   // Scroll to top on route change
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);

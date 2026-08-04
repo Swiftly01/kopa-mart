@@ -15,10 +15,10 @@ import {
   Eye,
   Hash,
   MapPin,
+  MessageSquareText,
   Package,
   Pencil,
   RefreshCw,
-  Star,
   Tag,
   Trash2,
   X,
@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils/utils";
 import { Product, ProductCondition } from "@/types/product";
 import useGetProduct from "@/hooks/products/queries/useGetProduct";
 import useDeleteProduct from "@/hooks/products/mutations/useDeleteProduct";
+import useGetProductReviews from "@/hooks/reviews/queries/useGetProductReviews";
 import appToast from "@/lib/appToast";
 import { AxiosError } from "axios";
 import { handleAxiosError } from "@/lib/utils/errors/errorHandler";
@@ -38,14 +39,22 @@ import { ImageGallery } from "@/components/ui/imageGallery";
 import StatPill from "@/components/ui/statPill";
 import DeleteModal from "@/components/ui/deleteProductModal";
 import DetailRow from "@/components/ui/detailRow";
+import { StarRating } from "@/components/ui/starRating";
+import { ReviewCard } from "@/components/ReviewCard";
+import Pagination from "@/components/ui/pagintion";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [reviewPage, setReviewPage] = useState(1);
 
   const { data: product, isLoading, isError, error } = useGetProduct(id);
+  const { data: reviews, isLoading: isReviewsLoading } = useGetProductReviews(
+    id,
+    { page: reviewPage, limit: 5 },
+  );
   
 
   const deleteMutation = useDeleteProduct();
@@ -240,6 +249,51 @@ export default function ProductDetailPage() {
                   {updatedDate}
                 </DetailRow>
               </div>
+
+              {/* reviews */}
+              <div className="bg-card border border-border/60 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-medium flex items-center gap-2">
+                    <MessageSquareText className="size-3.5" />
+                    Reviews
+                  </h3>
+                  {product.reviewCount > 0 && (
+                    <StarRating
+                      value={rating}
+                      showValue
+                      reviewCount={product.reviewCount}
+                      size="xs"
+                    />
+                  )}
+                </div>
+
+                {isReviewsLoading ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    Loading reviews…
+                  </p>
+                ) : !reviews || reviews.data.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    No reviews for this listing yet.
+                  </p>
+                ) : (
+                  <>
+                    <div className="space-y-3">
+                      {reviews.data.map((review) => (
+                        <ReviewCard key={review.id} review={review} />
+                      ))}
+                    </div>
+                    {reviews.meta.totalPages > 1 && (
+                      <div className="flex justify-center pt-1">
+                        <Pagination
+                          currentPage={reviews.meta.currentPage}
+                          totalPages={reviews.meta.totalPages}
+                          onPageChange={setReviewPage}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
 
             {/* ── right col ── */}
@@ -301,28 +355,12 @@ export default function ProductDetailPage() {
 
                 {/* rating */}
                 {rating > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={cn(
-                          "size-4",
-                          i < Math.round(rating)
-                            ? "fill-amber-400 stroke-amber-400"
-                            : "fill-muted stroke-muted-foreground/20",
-                        )}
-                      />
-                    ))}
-                    <span className="text-sm font-medium text-amber-500 ml-0.5">
-                      {rating.toFixed(1)}
-                    </span>
-                    {product.reviewCount > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        ({product.reviewCount}{" "}
-                        {product.reviewCount === 1 ? "review" : "reviews"})
-                      </span>
-                    )}
-                  </div>
+                  <StarRating
+                    value={rating}
+                    showValue
+                    reviewCount={product.reviewCount}
+                    size="md"
+                  />
                 )}
               </div>
 

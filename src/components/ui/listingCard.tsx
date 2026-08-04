@@ -2,9 +2,10 @@ import { formatNaira } from "@/data/seed";
 import { conditionConfig, statusConfig } from "@/lib/productConfig";
 import { cn } from "@/lib/utils/utils";
 import { Product, ProductCondition } from "@/types/product";
-import { Eye, Package, Pencil, Star, Trash2 } from "lucide-react";
+import { Eye, Package, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { StockBadge } from "./stockBadge";
+import { StarRating } from "./starRating";
 
 export default function ListingCard({
   product,
@@ -96,9 +97,11 @@ export default function ListingCard({
             {product.stateName}, {product.lgaName}
           </span>
           {rating > 0 && (
-            <span className="flex items-center gap-0.5 text-xs text-amber-500">
-              <Star className="size-3 fill-amber-400 stroke-amber-400" />
-              {rating.toFixed(1)}
+            <span className="flex items-center gap-1 text-xs">
+              <StarRating value={rating} size="xs" />
+              <span className="text-amber-500 font-medium">
+                {rating.toFixed(1)}
+              </span>
               {product.reviewCount > 0 && (
                 <span className="text-muted-foreground ml-0.5">
                   ({product.reviewCount})
