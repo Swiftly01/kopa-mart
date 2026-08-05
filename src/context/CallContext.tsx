@@ -99,6 +99,11 @@ const DEFAULT_ICE_SERVERS: RTCIceServerConfig[] = [
 // the safety net so the callee's ringing screen doesn't hang forever if the
 // caller cancels or simply nobody answers in time.
 const RINGING_TIMEOUT_MS = 30_000;
+// Safety net for the "connecting" phase itself: if SDP/ICE negotiation
+// stalls or silently throws partway through (no visible error otherwise —
+// see the try/catch added around offer/answer handling), the call would
+// otherwise sit on "Connecting…" forever with no way out for the user.
+const CONNECTING_TIMEOUT_MS = 20_000;
 // Safety net for the `call_initiate` acknowledgement itself: if the server
 // throws (e.g. "User is already in a call"), Nest's WsExceptionFilter emits
 // a generic `exception` event rather than resolving our ack callback, so the
@@ -116,6 +121,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const remoteDescSet = useRef(false);
   const durationTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const ringingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connectingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initiateAckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const returnPathRef = useRef<string>("/messages");
   const incomingCallRef = useRef<{
@@ -226,29 +232,51 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     const onOffer = async (data: { sdpType: "offer" | "answer"; sdp: string }) => {
       const pc = pcRef.current;
       if (!pc) return;
-      await pc.setRemoteDescription({ type: data.sdpType, sdp: data.sdp });
-      remoteDescSet.current = true;
-      await flushPendingCandidates(pc);
+      try {
+        await pc.setRemoteDescription({ type: data.sdpType, sdp: data.sdp });
+        remoteDescSet.current = true;
+        await flushPendingCandidates(pc);
 
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      socket.emit("call_answer", {
-        callId: incomingCallRef.current?.callId,
-        sdpType: answer.type,
-        sdp: answer.sdp,
-      });
-      setCall((prev) => (prev ? { ...prev, phase: "connected" } : prev));
-      startDurationTimer();
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.emit("call_answer", {
+          callId: incomingCallRef.current?.callId,
+          sdpType: answer.type,
+          sdp: answer.sdp,
+        });
+        clearConnectingTimeout();
+        setCall((prev) => (prev ? { ...prev, phase: "connected" } : prev));
+        startDurationTimer();
+      } catch (error) {
+        console.error("Failed to answer call offer:", error);
+        appToast({
+          title: "Couldn't connect the call",
+          description: "Something went wrong setting up the connection.",
+          variant: "destructive",
+        });
+        teardown("failed");
+      }
     };
 
     const onAnswer = async (data: { sdpType: "offer" | "answer"; sdp: string }) => {
       const pc = pcRef.current;
       if (!pc) return;
-      await pc.setRemoteDescription({ type: data.sdpType, sdp: data.sdp });
-      remoteDescSet.current = true;
-      await flushPendingCandidates(pc);
-      setCall((prev) => (prev ? { ...prev, phase: "connected" } : prev));
-      startDurationTimer();
+      try {
+        await pc.setRemoteDescription({ type: data.sdpType, sdp: data.sdp });
+        remoteDescSet.current = true;
+        await flushPendingCandidates(pc);
+        clearConnectingTimeout();
+        setCall((prev) => (prev ? { ...prev, phase: "connected" } : prev));
+        startDurationTimer();
+      } catch (error) {
+        console.error("Failed to process call answer:", error);
+        appToast({
+          title: "Couldn't connect the call",
+          description: "Something went wrong setting up the connection.",
+          variant: "destructive",
+        });
+        teardown("failed");
+      }
     };
 
     const onIceCandidate = async (data: {
@@ -365,6 +393,25 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     initiateAckTimer.current = null;
   }
 
+  function clearConnectingTimeout() {
+    if (connectingTimer.current) clearTimeout(connectingTimer.current);
+    connectingTimer.current = null;
+  }
+
+  function armConnectingTimeout() {
+    clearConnectingTimeout();
+    connectingTimer.current = setTimeout(() => {
+      if (callRef.current && callRef.current.phase === "connecting") {
+        appToast({
+          title: "Couldn't establish the call",
+          description: "The connection timed out. Please try again.",
+          variant: "destructive",
+        });
+        teardown("failed");
+      }
+    }, CONNECTING_TIMEOUT_MS);
+  }
+
   function startDurationTimer() {
     stopDurationTimer();
     durationTimer.current = setInterval(() => {
@@ -433,16 +480,27 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       if (!prev || !prev.isCaller) return prev;
       return { ...prev, phase: "connecting" };
     });
+    armConnectingTimeout();
 
     const pc = pcRef.current;
     if (!pc) return;
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    socketRef.current?.emit("call_offer", {
-      callId: callRef.current?.callId,
-      sdpType: offer.type,
-      sdp: offer.sdp,
-    });
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      socketRef.current?.emit("call_offer", {
+        callId: callRef.current?.callId,
+        sdpType: offer.type,
+        sdp: offer.sdp,
+      });
+    } catch (error) {
+      console.error("Failed to create call offer:", error);
+      appToast({
+        title: "Couldn't connect the call",
+        description: "Something went wrong setting up the connection.",
+        variant: "destructive",
+      });
+      teardown("failed");
+    }
   }
 
   function teardown(reason: CallPhase, durationSeconds?: number) {
@@ -457,6 +515,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     pcRef.current = null;
     remoteDescSet.current = false;
     pendingCandidates.current = [];
+    clearConnectingTimeout();
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     setLocalStream(null);
     setRemoteStream(null);
@@ -592,6 +651,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
     setCall((prev) => (prev ? { ...prev, phase: "connecting" } : prev));
+    armConnectingTimeout();
     socket.emit("call_join", { callId: incoming.callId });
   }, []);
 

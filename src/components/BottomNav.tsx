@@ -44,14 +44,15 @@ export const BottomNav = () => {
 
   const items = [
     { to: "/", label: "Home", icon: Home },
-    { to: "/messages", label: "Messages", icon: MessageCircle, badge: totalUnread },
-    // { to: "/saved", label: "Saved", icon: Heart },
+    { to: "/saved", label: "Saved", icon: Heart },
     { sell: true, label: "Sell", icon: Plus },
-    {
-      action: () => setTheme(theme === "dark" ? "light" : "dark"),
-      label: theme === "dark" ? "Light" : "Dark",
-      icon: theme === "dark" ? Sun : Moon,
-    },
+    { to: "/messages", label: "Messages", icon: MessageCircle, badge: totalUnread },
+
+    // {
+    //   action: () => setTheme(theme === "dark" ? "light" : "dark"),
+    //   label: theme === "dark" ? "Light" : "Dark",
+    //   icon: theme === "dark" ? Sun : Moon,
+    // },
     { to: "/profile", label: "Profile", icon: User },
   ] as const;
 

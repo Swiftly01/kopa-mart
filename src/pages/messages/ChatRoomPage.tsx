@@ -31,6 +31,7 @@ import {
 import { isSameDay } from "@/components/chat/chatDateUtils";
 import { CallType, ConversationType, Message } from "@/types/chat";
 import appToast from "@/lib/appToast";
+import SignInPrompt from "@/components/SignInPrompt";
 
 export default function ChatRoomPage() {
   const { conversationId = "" } = useParams();
@@ -132,9 +133,11 @@ export default function ChatRoomPage() {
     });
   };
 
+  if (!currentUser) return <SignInPrompt />;
+
   if (loadingConversation) {
     return (
-      <div className="flex flex-col h-screen">
+      <div className="flex flex-col h-[100dvh]">
         <div className="h-[57px] border-b border-border" />
         <MessageSkeleton />
       </div>
@@ -143,9 +146,12 @@ export default function ChatRoomPage() {
 
   if (!conversation) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-3 px-6 text-center">
+      <div className="flex flex-col items-center justify-center h-[100dvh] gap-3 px-6 text-center">
         <p className="font-medium text-foreground">Conversation not found</p>
-        <button onClick={() => navigate("/messages")} className="text-sm text-primary">
+        <button
+          onClick={() => navigate("/messages")}
+          className="text-sm text-primary"
+        >
           Back to messages
         </button>
       </div>
@@ -160,12 +166,18 @@ export default function ChatRoomPage() {
       : "Conversation";
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-[100dvh] bg-background">
       <ChatHeader
         conversation={conversation}
         currentUserId={currentUser?.id}
-        isOnline={!isGroup && !!otherParticipant && isUserOnline(otherParticipant.id)}
-        typingLabel={typingUsers.length > 0 ? `${typingUsers[0].userName} is typing…` : undefined}
+        isOnline={
+          !isGroup && !!otherParticipant && isUserOnline(otherParticipant.id)
+        }
+        typingLabel={
+          typingUsers.length > 0
+            ? `${typingUsers[0].userName} is typing…`
+            : undefined
+        }
         callDisabled={isBusy}
         onStartCall={(type) => {
           if (isGroup) {
@@ -189,7 +201,7 @@ export default function ChatRoomPage() {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto"
+        className="flex-1 min-h-0 overflow-y-auto"
       >
         <div ref={topSentinelRef} />
         {isFetchingNextPage && <MessageSkeleton />}
@@ -219,7 +231,8 @@ export default function ChatRoomPage() {
             const next = messages[index + 1];
             const isOwn = message.senderId === currentUser?.id;
 
-            const showDateSeparator = !prev || !isSameDay(prev.createdAt, message.createdAt);
+            const showDateSeparator =
+              !prev || !isSameDay(prev.createdAt, message.createdAt);
             const isFirstInGroup =
               !prev ||
               prev.senderId !== message.senderId ||
@@ -240,11 +253,16 @@ export default function ChatRoomPage() {
                   isFirstInGroup={isFirstInGroup}
                   isLastInGroup={isLastInGroup}
                   repliedMessage={
-                    message.replyToId ? messagesById.get(message.replyToId) : undefined
+                    message.replyToId
+                      ? messagesById.get(message.replyToId)
+                      : undefined
                   }
                   onReply={setReplyTo}
                   onEdit={(m) =>
-                    updateMessage.mutate({ id: m.id, payload: { content: m.content ?? "" } })
+                    updateMessage.mutate({
+                      id: m.id,
+                      payload: { content: m.content ?? "" },
+                    })
                   }
                   onDelete={(m) => deleteMessage.mutate(m.id)}
                   onRetry={handleRetry}
@@ -255,7 +273,9 @@ export default function ChatRoomPage() {
 
           {typingUsers.length > 0 && (
             <TypingIndicator
-              label={isGroup ? `${typingUsers[0].userName} is typing…` : undefined}
+              label={
+                isGroup ? `${typingUsers[0].userName} is typing…` : undefined
+              }
             />
           )}
           <div ref={bottomRef} />
