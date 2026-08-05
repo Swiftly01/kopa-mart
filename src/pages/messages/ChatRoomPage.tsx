@@ -43,7 +43,7 @@ export default function ChatRoomPage() {
     typingUsersByConversation,
     markRead,
   } = useChatSocket();
-  const { startCall } = useCall();
+  const { startCall, isBusy } = useCall();
 
   const { data: conversation, isLoading: loadingConversation } =
     useConversation(conversationId);
@@ -166,6 +166,7 @@ export default function ChatRoomPage() {
         currentUserId={currentUser?.id}
         isOnline={!isGroup && !!otherParticipant && isUserOnline(otherParticipant.id)}
         typingLabel={typingUsers.length > 0 ? `${typingUsers[0].userName} is typing…` : undefined}
+        callDisabled={isBusy}
         onStartCall={(type) => {
           if (isGroup) {
             appToast({

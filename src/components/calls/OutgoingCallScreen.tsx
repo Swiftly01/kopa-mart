@@ -11,7 +11,12 @@ export function OutgoingCallScreen({
   onCancel: () => void;
 }) {
   const [first, ...rest] = call.peerName.split(" ");
-  const statusLabel = call.phase === "connecting" ? "Connecting…" : "Ringing…";
+  const statusLabel =
+    call.phase === "connecting"
+      ? "Connecting…"
+      : call.callId
+        ? "Ringing…"
+        : "Calling…";
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-gradient-hero px-6 py-16 text-white animate-in fade-in">

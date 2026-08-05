@@ -15,6 +15,7 @@ export function ChatHeader({
   currentUserId,
   isOnline,
   typingLabel,
+  callDisabled,
   onStartCall,
   onDelete,
 }: {
@@ -22,6 +23,7 @@ export function ChatHeader({
   currentUserId?: string;
   isOnline: boolean;
   typingLabel?: string;
+  callDisabled?: boolean;
   onStartCall: (type: "voice" | "video") => void;
   onDelete: () => void;
 }) {
@@ -76,14 +78,16 @@ export function ChatHeader({
 
       <button
         onClick={() => onStartCall("voice")}
-        className="flex items-center justify-center rounded-full size-9 shrink-0 hover:bg-muted"
+        disabled={callDisabled}
+        className="flex items-center justify-center rounded-full size-9 shrink-0 hover:bg-muted disabled:opacity-40"
         aria-label="Voice call"
       >
         <Phone className="size-[18px]" />
       </button>
       <button
         onClick={() => onStartCall("video")}
-        className="flex items-center justify-center rounded-full size-9 shrink-0 hover:bg-muted"
+        disabled={callDisabled}
+        className="flex items-center justify-center rounded-full size-9 shrink-0 hover:bg-muted disabled:opacity-40"
         aria-label="Video call"
       >
         <Video className="size-5" />

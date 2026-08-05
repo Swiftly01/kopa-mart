@@ -50,6 +50,7 @@ import { CallProvider } from "./context/CallContext.tsx";
 import { GlobalCallOverlay } from "./components/calls/GlobalCallOverlay.tsx";
 import MessagesPage from "./pages/messages/MessagesPage.tsx";
 import ChatRoomPage from "./pages/messages/ChatRoomPage.tsx";
+import VideoCallPage from "./pages/calls/VideoCallPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,7 @@ const App = () => (
                 <Route path="/notifications" element={<Notification />} />
                 <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/messages/:conversationId" element={<ChatRoomPage />} />
+                <Route path="/call/:callId" element={<VideoCallPage />} />
                 <Route path="/seller-onboarding/intro" element={<OnbIntro />} />
                 <Route path="/seller-onboarding/apply" element={<OnbApply />} />
                 <Route

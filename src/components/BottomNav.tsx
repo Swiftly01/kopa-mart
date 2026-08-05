@@ -45,7 +45,7 @@ export const BottomNav = () => {
   const items = [
     { to: "/", label: "Home", icon: Home },
     { to: "/messages", label: "Messages", icon: MessageCircle, badge: totalUnread },
-  //  { to: "/saved", label: "Saved", icon: Heart },
+    // { to: "/saved", label: "Saved", icon: Heart },
     { sell: true, label: "Sell", icon: Plus },
     {
       action: () => setTheme(theme === "dark" ? "light" : "dark"),
@@ -60,7 +60,7 @@ export const BottomNav = () => {
       className="fixed bottom-0 inset-x-0 z-50 border-t border-border bg-background/95 backdrop-blur-lg pb-[env(safe-area-inset-bottom)]"
       aria-label="Primary"
     >
-      <ul className="grid max-w-2xl grid-cols-6 mx-auto">
+      <ul className="grid max-w-2xl grid-cols-5 mx-auto">
         {items.map((it, i) => {
           const Icon = it.icon;
           if ("sell" in it) {

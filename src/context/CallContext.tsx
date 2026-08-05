@@ -8,18 +8,48 @@ import {
   useState,
 } from "react";
 import type { Socket } from "socket.io-client";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { getCallSocket } from "@/lib/socket/socketManager";
 import { CallType, RTCIceServerConfig } from "@/types/chat";
 import appToast from "@/lib/appToast";
 
+/**
+ * Idle → Calling/Ringing → Connecting → Connected → (Declined|Missed|
+ * Cancelled|Ended|Failed|Unreachable|Busy), then back to Idle.
+ *
+ *  - "calling"  : caller's full-screen "Calling…" state, before the callee
+ *                 has answered.
+ *  - "ringing"  : callee's full-screen incoming-call state.
+ *  - "connecting": accepted, exchanging SDP/ICE, media not flowing yet.
+ *  - "connected": media flowing. Video calls navigate to a dedicated
+ *                 `/call/:callId` route the moment this is reached; voice
+ *                 calls stay on a full-screen modal.
+ *  - anything else is a terminal reason, shown briefly before resetting.
+ */
 export type CallPhase =
   | "idle"
-  | "outgoing"
-  | "incoming"
+  | "calling"
+  | "ringing"
   | "connecting"
-  | "active"
-  | "ended";
+  | "connected"
+  | "declined"
+  | "missed"
+  | "cancelled"
+  | "ended"
+  | "failed"
+  | "unreachable"
+  | "busy";
+
+const TERMINAL_PHASES: CallPhase[] = [
+  "declined",
+  "missed",
+  "cancelled",
+  "ended",
+  "failed",
+  "unreachable",
+  "busy",
+];
 
 export interface ActiveCallInfo {
   callId: string;
@@ -32,13 +62,13 @@ export interface ActiveCallInfo {
   isCameraOff: boolean;
   isSpeakerOn: boolean;
   durationSeconds: number;
-  endedReason?: string;
 }
 
 interface CallContextValue {
   call: ActiveCallInfo | null;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
+  isBusy: boolean;
   startCall: (
     calleeId: string,
     calleeName: string,
@@ -52,6 +82,7 @@ interface CallContextValue {
   toggleMute: () => void;
   toggleCamera: () => void;
   toggleSpeaker: () => void;
+  switchCamera: () => Promise<void>;
 }
 
 const CallContext = createContext<CallContextValue | undefined>(undefined);
@@ -60,13 +91,33 @@ const DEFAULT_ICE_SERVERS: RTCIceServerConfig[] = [
   { urls: "stun:stun.l.google.com:19302" },
 ];
 
+// Mirrors the backend's own 30s missed-call timeout (call.gateway.ts). The
+// backend only notifies the *caller*'s side of a room-scoped miss/cancel
+// once the callee has joined the call room — until the callee accepts, they
+// haven't joined it, so they never receive `call_missed`/`call_cancelled`
+// themselves (see CHAT_INTEGRATION_ANALYSIS.md). This client-side timer is
+// the safety net so the callee's ringing screen doesn't hang forever if the
+// caller cancels or simply nobody answers in time.
+const RINGING_TIMEOUT_MS = 30_000;
+// Safety net for the `call_initiate` acknowledgement itself: if the server
+// throws (e.g. "User is already in a call"), Nest's WsExceptionFilter emits
+// a generic `exception` event rather than resolving our ack callback, so the
+// ack can otherwise hang indefinitely.
+const INITIATE_ACK_TIMEOUT_MS = 12_000;
+
 export function CallProvider({ children }: { children: React.ReactNode }) {
   const { session } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const socketRef = useRef<Socket | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const pendingCandidates = useRef<RTCIceCandidateInit[]>([]);
   const remoteDescSet = useRef(false);
   const durationTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const ringingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initiateAckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const returnPathRef = useRef<string>("/messages");
   const incomingCallRef = useRef<{
     callId: string;
     type: CallType;
@@ -79,6 +130,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const [call, setCall] = useState<ActiveCallInfo | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+
   const callRef = useRef<ActiveCallInfo | null>(null);
   useEffect(() => {
     callRef.current = call;
@@ -88,10 +140,35 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     localStreamRef.current = localStream;
   }, [localStream]);
 
+  const isBusy =
+    call !== null && !TERMINAL_PHASES.includes(call.phase) && call.phase !== "idle";
+
+  // Navigate to the dedicated video-call page the moment a video call
+  // connects; navigate back once it leaves the "connected" state.
+  useEffect(() => {
+    if (!call) return;
+    if (call.type !== CallType.VIDEO) return;
+
+    if (call.phase === "connected" && location.pathname !== `/call/${call.callId}`) {
+      returnPathRef.current = location.pathname;
+      navigate(`/call/${call.callId}`);
+    }
+
+    if (TERMINAL_PHASES.includes(call.phase) && location.pathname === `/call/${call.callId}`) {
+      navigate(returnPathRef.current || "/messages");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [call?.phase, call?.type, call?.callId]);
+
   useEffect(() => {
     if (!session?.token) return;
     const socket = getCallSocket(session.token);
     socketRef.current = socket;
+
+    const clearRingingTimer = () => {
+      if (ringingTimer.current) clearTimeout(ringingTimer.current);
+      ringingTimer.current = null;
+    };
 
     const onIncoming = (data: {
       callId: string;
@@ -99,6 +176,20 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       caller: { id: string; name: string };
       iceServers: RTCIceServerConfig[];
     }) => {
+      // Backend already refuses to ring a busy user at the DB layer, but
+      // guard client-side too in case of a race — never clobber a call
+      // already in progress, and let the would-be caller know we're busy.
+      // (Computed fresh from the ref, not the `isBusy` closure variable,
+      // since this listener is only attached once per socket connection.)
+      const currentlyBusy =
+        callRef.current !== null &&
+        !TERMINAL_PHASES.includes(callRef.current.phase) &&
+        callRef.current.phase !== "idle";
+      if (currentlyBusy) {
+        socket.emit("call_decline", { callId: data.callId });
+        return;
+      }
+
       incomingCallRef.current = {
         callId: data.callId,
         type: data.type,
@@ -110,7 +201,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       setCall({
         callId: data.callId,
         type: data.type,
-        phase: "incoming",
+        phase: "ringing",
         isCaller: false,
         peerId: data.caller.id,
         peerName: data.caller.name,
@@ -119,6 +210,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         isSpeakerOn: true,
         durationSeconds: 0,
       });
+
+      clearRingingTimer();
+      ringingTimer.current = setTimeout(() => {
+        if (callRef.current?.callId === data.callId && callRef.current.phase === "ringing") {
+          teardown("missed");
+        }
+      }, RINGING_TIMEOUT_MS);
     };
 
     const onPeerJoined = () => {
@@ -139,7 +237,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         sdpType: answer.type,
         sdp: answer.sdp,
       });
-      setCall((prev) => (prev ? { ...prev, phase: "active" } : prev));
+      setCall((prev) => (prev ? { ...prev, phase: "connected" } : prev));
       startDurationTimer();
     };
 
@@ -149,7 +247,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       await pc.setRemoteDescription({ type: data.sdpType, sdp: data.sdp });
       remoteDescSet.current = true;
       await flushPendingCandidates(pc);
-      setCall((prev) => (prev ? { ...prev, phase: "active" } : prev));
+      setCall((prev) => (prev ? { ...prev, phase: "connected" } : prev));
       startDurationTimer();
     };
 
@@ -171,26 +269,28 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const onUnreachable = () => {
+    const onUnreachable = (data: { message?: string }) => {
+      clearInitiateAckTimer();
       appToast({
         title: "User unavailable",
-        description: "They're not online right now.",
+        description: data?.message || "They're not online right now.",
         variant: "destructive",
       });
       teardown("unreachable");
     };
 
     const onMissed = () => {
-      appToast({ title: "No answer" });
+      clearInitiateAckTimer();
       teardown("missed");
     };
 
     const onDecline = () => {
-      appToast({ title: "Call declined" });
+      clearInitiateAckTimer();
       teardown("declined");
     };
 
     const onCancelled = () => {
+      clearRingingTimer();
       teardown("cancelled");
     };
 
@@ -199,6 +299,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     };
 
     const onFailed = (data: { reason?: string }) => {
+      clearInitiateAckTimer();
       appToast({
         title: "Call failed",
         description: data.reason,
@@ -209,6 +310,22 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
     const onCallError = (data: { message: string }) => {
       appToast({ title: "Call error", description: data.message, variant: "destructive" });
+    };
+
+    // Nest's default WsExceptionFilter emits a generic `exception` event
+    // (rather than resolving the ack callback) when a `@SubscribeMessage`
+    // handler throws — e.g. `call_initiate` rejecting a busy user, a
+    // self-call, or a rate limit. Surface those here.
+    const onException = (data: { message?: string | string[]; status?: string }) => {
+      clearInitiateAckTimer();
+      const message = Array.isArray(data?.message)
+        ? data.message.join(", ")
+        : data?.message || "Something went wrong with the call.";
+
+      if (callRef.current && !TERMINAL_PHASES.includes(callRef.current.phase)) {
+        appToast({ title: "Call couldn't start", description: message, variant: "destructive" });
+        teardown("failed");
+      }
     };
 
     socket.on("call_incoming", onIncoming);
@@ -223,6 +340,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     socket.on("call_ended", onEnded);
     socket.on("call_failed", onFailed);
     socket.on("call_error", onCallError);
+    socket.on("exception", onException);
 
     return () => {
       socket.off("call_incoming", onIncoming);
@@ -237,9 +355,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       socket.off("call_ended", onEnded);
       socket.off("call_failed", onFailed);
       socket.off("call_error", onCallError);
+      socket.off("exception", onException);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.token]);
+
+  function clearInitiateAckTimer() {
+    if (initiateAckTimer.current) clearTimeout(initiateAckTimer.current);
+    initiateAckTimer.current = null;
+  }
 
   function startDurationTimer() {
     stopDurationTimer();
@@ -286,13 +410,6 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       setRemoteStream(event.streams[0] ?? null);
     };
 
-    pc.onconnectionstatechange = () => {
-      if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
-        // Let the server-side disconnect/end handlers drive cleanup; this
-        // just avoids a stuck "connecting" UI if ICE never completes.
-      }
-    };
-
     pcRef.current = pc;
     return pc;
   }
@@ -300,13 +417,18 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   async function acquireLocalMedia(type: CallType): Promise<MediaStream> {
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
-      video: type === CallType.VIDEO,
+      video: type === CallType.VIDEO ? { facingMode: "user" } : false,
     });
     setLocalStream(stream);
     return stream;
   }
 
   async function createOfferIfCaller() {
+    if (ringingTimer.current) {
+      clearTimeout(ringingTimer.current);
+      ringingTimer.current = null;
+    }
+
     setCall((prev) => {
       if (!prev || !prev.isCaller) return prev;
       return { ...prev, phase: "connecting" };
@@ -323,8 +445,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
-  function teardown(reason: string, durationSeconds?: number) {
+  function teardown(reason: CallPhase, durationSeconds?: number) {
     stopDurationTimer();
+    clearInitiateAckTimer();
+    if (ringingTimer.current) {
+      clearTimeout(ringingTimer.current);
+      ringingTimer.current = null;
+    }
     pcRef.current?.getSenders().forEach((s) => s.track?.stop());
     pcRef.current?.close();
     pcRef.current = null;
@@ -338,13 +465,12 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       prev
         ? {
             ...prev,
-            phase: "ended",
-            endedReason: reason,
+            phase: reason,
             durationSeconds: durationSeconds ?? prev.durationSeconds,
           }
         : prev,
     );
-    setTimeout(() => setCall(null), 2500);
+    setTimeout(() => setCall(null), 2800);
   }
 
   const startCall = useCallback(
@@ -356,6 +482,14 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     ) => {
       const socket = socketRef.current;
       if (!socket) return;
+
+      if (isBusy) {
+        appToast({
+          title: "You're already on a call",
+          description: "Finish your current call before starting another one.",
+        });
+        return;
+      }
 
       let stream: MediaStream;
       try {
@@ -369,6 +503,31 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      setCall({
+        callId: "",
+        type,
+        phase: "calling",
+        isCaller: true,
+        peerId: calleeId,
+        peerName: calleeName,
+        isMuted: false,
+        isCameraOff: false,
+        isSpeakerOn: true,
+        durationSeconds: 0,
+      });
+
+      clearInitiateAckTimer();
+      initiateAckTimer.current = setTimeout(() => {
+        if (callRef.current && callRef.current.phase === "calling" && !callRef.current.callId) {
+          appToast({
+            title: "Couldn't reach the server",
+            description: "The call request timed out. Please try again.",
+            variant: "destructive",
+          });
+          teardown("failed");
+        }
+      }, INITIATE_ACK_TIMEOUT_MS);
+
       socket.emit(
         "call_initiate",
         { calleeId, type, conversationId },
@@ -378,14 +537,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           iceServers?: RTCIceServerConfig[];
           message?: string;
         }) => {
+          clearInitiateAckTimer();
+
           if (ack.event === "call_unreachable") {
             appToast({
               title: "User unavailable",
               description: ack.message,
               variant: "destructive",
             });
-            stream.getTracks().forEach((t) => t.stop());
-            setLocalStream(null);
+            teardown("unreachable");
             return;
           }
 
@@ -395,28 +555,26 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
             pc.addTrack(track, stream);
           });
 
-          setCall({
-            callId: ack.callId,
-            type,
-            phase: "outgoing",
-            isCaller: true,
-            peerId: calleeId,
-            peerName: calleeName,
-            isMuted: false,
-            isCameraOff: false,
-            isSpeakerOn: true,
-            durationSeconds: 0,
-          });
+          setCall((prev) =>
+            prev && prev.phase === "calling"
+              ? { ...prev, callId: ack.callId }
+              : prev,
+          );
         },
       );
     },
-    [],
+    [isBusy],
   );
 
   const acceptCall = useCallback(async () => {
     const incoming = incomingCallRef.current;
     const socket = socketRef.current;
     if (!incoming || !socket) return;
+
+    if (ringingTimer.current) {
+      clearTimeout(ringingTimer.current);
+      ringingTimer.current = null;
+    }
 
     let stream: MediaStream;
     try {
@@ -447,13 +605,19 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
   const cancelCall = useCallback(() => {
     if (!call) return;
-    socketRef.current?.emit("call_cancel", { callId: call.callId });
+    if (call.callId) {
+      socketRef.current?.emit("call_cancel", { callId: call.callId });
+    } else {
+      // Still waiting on the call_initiate ack — nothing exists server-side
+      // yet to cancel, just stop waiting for it locally.
+      clearInitiateAckTimer();
+    }
     teardown("cancelled");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [call]);
 
   const endCall = useCallback(() => {
-    if (!call) return;
+    if (!call?.callId) return;
     socketRef.current?.emit("call_end", { callId: call.callId });
     teardown("ended", call.durationSeconds);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -479,9 +643,42 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
   const toggleSpeaker = useCallback(() => {
     // Browsers don't expose a reliable "force speakerphone" API; this
-    // toggles a UI flag consumers can use to pick which <audio> sink /
-    // volume profile to render (via setSinkId where supported).
+    // toggles a UI flag consumers use to pick an output route where
+    // supported (e.g. HTMLMediaElement.setSinkId on Chrome/Android).
     setCall((prev) => (prev ? { ...prev, isSpeakerOn: !prev.isSpeakerOn } : prev));
+  }, []);
+
+  const switchCamera = useCallback(async () => {
+    const pc = pcRef.current;
+    const currentStream = localStreamRef.current;
+    if (!pc || !currentStream) return;
+
+    const currentTrack = currentStream.getVideoTracks()[0];
+    if (!currentTrack) return;
+
+    const currentFacing = currentTrack.getSettings().facingMode;
+    const nextFacing = currentFacing === "environment" ? "user" : "environment";
+
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: nextFacing } },
+      });
+      const newTrack = newStream.getVideoTracks()[0];
+      const sender = pc.getSenders().find((s) => s.track?.kind === "video");
+      await sender?.replaceTrack(newTrack);
+
+      currentTrack.stop();
+      const merged = new MediaStream([...currentStream.getAudioTracks(), newTrack]);
+      localStreamRef.current = merged;
+      setLocalStream(merged);
+    } catch {
+      appToast({
+        title: "Couldn't switch camera",
+        description: "This device may only have one camera available.",
+        variant: "destructive",
+      });
+    }
   }, []);
 
   const value = useMemo<CallContextValue>(
@@ -489,6 +686,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       call,
       localStream,
       remoteStream,
+      isBusy,
       startCall,
       acceptCall,
       declineCall,
@@ -497,11 +695,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       toggleMute,
       toggleCamera,
       toggleSpeaker,
+      switchCamera,
     }),
     [
       call,
       localStream,
       remoteStream,
+      isBusy,
       startCall,
       acceptCall,
       declineCall,
@@ -510,6 +710,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       toggleMute,
       toggleCamera,
       toggleSpeaker,
+      switchCamera,
     ],
   );
 

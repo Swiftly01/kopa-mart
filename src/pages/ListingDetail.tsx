@@ -88,7 +88,7 @@ const ListingDetail = () => {
     if (!product.sellerId || startingChat) return;
     setStartingChat(true);
     createConversation.mutate(
-      { participantIds: [product.sellerId, user.id] },
+      { participantIds: [product.sellerId] },
       {
         onSuccess: (conversation) => navigate(`/messages/${conversation.id}`),
         onSettled: () => setStartingChat(false),
