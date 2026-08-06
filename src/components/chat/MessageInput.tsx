@@ -88,7 +88,7 @@ export function MessageInput({
     } catch (error) {
       const message =
         error instanceof ChatMediaUnavailableError
-          ? "Attachments aren't supported by the server yet."
+          ? "Attachments aren't supported  yet."
           : "Upload failed. Check your connection and try again.";
       setAttachment((prev) =>
         prev && prev.file === draft.file
