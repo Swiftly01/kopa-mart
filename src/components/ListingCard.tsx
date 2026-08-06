@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Heart, MapPin, Tag } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Product } from "@/types/product";
+import { StarRating } from "@/components/ui/starRating";
 import { useGetSaveStatus } from "@/hooks/saved-products/queries/useGetSaveStatus";
 import { useToggleSavedProduct } from "@/hooks/saved-products/mutations/usetoggleSavedProduct";
 
@@ -17,6 +18,8 @@ export const ListingCard = ({ listing }: { listing: Product }) => {
   const { mutate: toggle, isPending } = useToggleSavedProduct(listing.id);
 
   const image = listing.images.find((i) => i.isMain) ?? listing.images[0];
+  const rating = parseFloat(listing.rating ?? "0");
+  const reviewCount = listing.reviewCount ?? 0;
 
   return (
     <Link
@@ -76,6 +79,9 @@ export const ListingCard = ({ listing }: { listing: Product }) => {
       <div className="p-3 space-y-1">
         <h3 className="font-medium text-sm line-clamp-1">{listing.name}</h3>
         <p className="font-bold text-primary">{formatNaira(listing.price)}</p>
+        {reviewCount > 0 && (
+          <StarRating value={rating} showValue reviewCount={reviewCount} size="xs" />
+        )}
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="size-3 shrink-0" />
           <span className="line-clamp-1">

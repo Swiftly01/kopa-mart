@@ -102,6 +102,10 @@ export interface User {
 
   sellerOnboarding?: SellerOnboarding | null;
 
+  /** Aggregate rating across all of this user's products, when they're a seller */
+  sellerAverageRating?: number;
+  sellerReviewCount?: number;
+
   lastLoginAt: string | null;
 
   createdAt: string;

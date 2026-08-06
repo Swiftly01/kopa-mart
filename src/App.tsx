@@ -38,12 +38,19 @@ import OnbIntro from "./pages/seller-onboarding/Intro";
 import OnbPending from "./pages/seller-onboarding/Pending";
 import OnbStoreProfile from "./pages/seller-onboarding/StoreProfile";
 import SellerProfile from "./pages/SellerProfile";
+import WriteReview from "./pages/WriteReview";
 import Signup from "./pages/Signup";
 import Support from "./pages/Support";
 import VerifyEmail from "./pages/VerifyEmail";
 import Notification from "./pages/Notification.tsx";
 import AdminNotifications from "./pages/admin/AdminNotifications.tsx";
 import NotificationPushListener from "./components/ui/NotificationPushListener.tsx";
+import { ChatSocketProvider } from "./context/ChatSocketContext.tsx";
+import { CallProvider } from "./context/CallContext.tsx";
+import { GlobalCallOverlay } from "./components/calls/GlobalCallOverlay.tsx";
+import MessagesPage from "./pages/messages/MessagesPage.tsx";
+import ChatRoomPage from "./pages/messages/ChatRoomPage.tsx";
+import VideoCallPage from "./pages/calls/VideoCallPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -54,8 +61,11 @@ const App = () => (
       <Sonner  />
       <BrowserRouter>
         <AuthProvider>
+          <ChatSocketProvider>
+          <CallProvider>
           <NotificationPermissionPrompt />
           <NotificationPushListener />
+          <GlobalCallOverlay />
           <AppLayout>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -76,6 +86,9 @@ const App = () => (
                 }
               >
                 <Route path="/notifications" element={<Notification />} />
+                <Route path="/messages" element={<MessagesPage />} />
+                <Route path="/messages/:conversationId" element={<ChatRoomPage />} />
+                <Route path="/call/:callId" element={<VideoCallPage />} />
                 <Route path="/seller-onboarding/intro" element={<OnbIntro />} />
                 <Route path="/seller-onboarding/apply" element={<OnbApply />} />
                 <Route
@@ -111,6 +124,7 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/listings" element={<Listings />} />
                 <Route path="/listing/:slug" element={<ListingDetail />} />
+                <Route path="/listing/:slug/review" element={<WriteReview />} />
                 <Route path="/seller/:id" element={<SellerProfile />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route
@@ -152,6 +166,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AppLayout>
+          </CallProvider>
+          </ChatSocketProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

@@ -1,10 +1,15 @@
 import { DetailSkeleton } from "@/components/detailSkeleton";
 import { Button } from "@/components/ui/button";
+import { StarRating } from "@/components/ui/starRating";
+import { ReviewsSection } from "@/components/ReviewsSection";
 import useGetProductBySlug from "@/hooks/products/queries/useGetProductBySlug";
 import { useToggleSavedProduct } from "@/hooks/saved-products/mutations/usetoggleSavedProduct";
 import { useGetSaveStatus } from "@/hooks/saved-products/queries/useGetSaveStatus";
 import useGetSellerOnboardingData from "@/hooks/seller/queries/useGetSellerOnboardingData";
 import useUser from "@/hooks/users/queries/useUser";
+import useCreateInteraction from "@/hooks/interactions/mutations/useCreateInteraction";
+import useCreateConversation from "@/hooks/chat/mutations/useCreateConversation";
+import { InteractionType } from "@/types/interaction";
 import { conditionStyle } from "@/lib/productConfig";
 import { cn, formatNaira, timeAgo } from "@/lib/utils/utils";
 import {
@@ -32,12 +37,18 @@ const ListingDetail = () => {
 
   const { data: product, isLoading, isError } = useGetProductBySlug(slug);
 
+  const { data: user } = useUser();
+  const isBuyer = user?.role === "buyer";
+  const recordInteraction = useCreateInteraction();
+
   const { isSaved } = useGetSaveStatus(product?.id ?? "");
   const { mutate: toggleSave, isPending: isSavePending } =
     useToggleSavedProduct(product?.id ?? "");
   const { data: sellerOnboarding } = useGetSellerOnboardingData(
     product?.seller?.id,
   );
+  const createConversation = useCreateConversation();
+  const [startingChat, setStartingChat] = useState(false);
 
   if (isLoading) return <DetailSkeleton />;
 
@@ -60,6 +71,30 @@ const ListingDetail = () => {
     .filter(Boolean)
     .join(", ");
   const conditionKey = product.condition?.toLowerCase() ?? "";
+  const productRating = parseFloat(product.rating ?? "0");
+  const productReviewCount = product.reviewCount ?? 0;
+
+  const handleContactInteraction = (type: InteractionType) => {
+    if (!isBuyer) return;
+    recordInteraction.mutate({
+      productId: product.id,
+      sellerId: product.sellerId,
+      type,
+    });
+  };
+
+  const handleMessageSeller = () => {
+    if (!user) return navigate("/login");
+    if (!product.sellerId || startingChat) return;
+    setStartingChat(true);
+    createConversation.mutate(
+      { participantIds: [product.sellerId, user.id] },
+      {
+        onSuccess: (conversation) => navigate(`/messages/${conversation.id}`),
+        onSettled: () => setStartingChat(false),
+      },
+    );
+  };
 
   // Seller
   const seller = product.seller;
@@ -216,6 +251,20 @@ const ListingDetail = () => {
             {product.name}
           </h1>
 
+          {/* Rating */}
+          <div className="flex items-center gap-2">
+            {productReviewCount > 0 ? (
+              <StarRating
+                value={productRating}
+                showValue
+                reviewCount={productReviewCount}
+                size="sm"
+              />
+            ) : (
+              <span className="text-xs text-zinc-400">No reviews yet</span>
+            )}
+          </div>
+
           {/* Price */}
           <div className="flex items-baseline gap-3">
             <span className="text-3xl font-extrabold text-emerald-600">
@@ -252,18 +301,29 @@ const ListingDetail = () => {
 
           {/* CTA buttons */}
           <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={handleMessageSeller}
+              disabled={startingChat}
+              className="flex items-center justify-center flex-1 h-12 gap-2 font-semibold text-white transition-colors rounded-full shadow-sm bg-gradient-primary disabled:opacity-60"
+            >
+              <MessageCircle className="size-4" />
+              {startingChat ? "Opening chat…" : "Message Seller"}
+            </button>
             <a
               href={`https://wa.me/${waNumber}?text=${waMsg}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center flex-1 h-12 gap-2 font-semibold text-white transition-colors rounded-full shadow-sm bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700"
+              onClick={() => handleContactInteraction("whatsapp")}
+              className="flex items-center justify-center h-12 gap-2 px-5 font-semibold text-white transition-colors rounded-full shadow-sm bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700"
+              aria-label="Chat on WhatsApp"
             >
               <MessageCircle className="size-4" />
-              Chat on WhatsApp
             </a>
             {sellerPhone ? (
               <a
                 href={`tel:${sellerPhone}`}
+                onClick={() => handleContactInteraction("call")}
                 className="flex items-center justify-center h-12 gap-2 px-5 font-semibold transition-colors bg-white border-2 rounded-full border-zinc-200 hover:bg-zinc-50 text-zinc-700"
               >
                 <Phone className="size-4" />
@@ -351,6 +411,7 @@ const ListingDetail = () => {
               {sellerPhone && (
                 <a
                   href={`tel:${sellerPhone}`}
+                  onClick={() => handleContactInteraction("call")}
                   className="flex items-center gap-1 text-[11px] text-emerald-600 font-medium hover:underline"
                 >
                   <Phone className="size-3" />
@@ -376,6 +437,17 @@ const ListingDetail = () => {
             </a>
           </div>
         </div>
+      </div>
+
+      {/* ── Ratings & Reviews ── */}
+      <div className="max-w-6xl px-4 pb-2 mx-auto">
+        <ReviewsSection
+          productId={product.id}
+          sellerId={product.sellerId}
+          slug={product.slug}
+          rating={productRating}
+          reviewCount={productReviewCount}
+        />
       </div>
 
       {/* ── Safety tips ── */}
