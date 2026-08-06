@@ -1,9 +1,8 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Home, Heart, Plus, User, Moon, Sun, MessageCircle } from "lucide-react";
+import { Home, Heart, Plus, User, Moon, Sun } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { cn } from "@/lib/utils/utils";
 import useUser from "@/hooks/users/queries/useUser";
-import useUnreadMessages from "@/hooks/messages/queries/useUnreadMessages";
 import { SellerVerificationStatusEnum } from "@/types/adminSellerVerification";
 import { UserRoleEnum } from "@/types/user";
 
@@ -11,8 +10,6 @@ export const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: user } = useUser();
-  const { data: unreadRows } = useUnreadMessages();
-  const totalUnread = unreadRows?.reduce((sum, row) => sum + row.unreadCount, 0) ?? 0;
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
 
@@ -46,13 +43,11 @@ export const BottomNav = () => {
     { to: "/", label: "Home", icon: Home },
     { to: "/saved", label: "Saved", icon: Heart },
     { sell: true, label: "Sell", icon: Plus },
-    { to: "/messages", label: "Messages", icon: MessageCircle, badge: totalUnread },
-
-    // {
-    //   action: () => setTheme(theme === "dark" ? "light" : "dark"),
-    //   label: theme === "dark" ? "Light" : "Dark",
-    //   icon: theme === "dark" ? Sun : Moon,
-    // },
+    {
+      action: () => setTheme(theme === "dark" ? "light" : "dark"),
+      label: theme === "dark" ? "Light" : "Dark",
+      icon: theme === "dark" ? Sun : Moon,
+    },
     { to: "/profile", label: "Profile", icon: User },
   ] as const;
 
@@ -102,14 +97,7 @@ export const BottomNav = () => {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <span className="relative">
-                  <Icon className={cn("size-5", active && "fill-primary/15")} />
-                  {"badge" in it && it.badge > 0 && (
-                    <span className="absolute -top-1.5 -right-2 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold leading-none">
-                      {it.badge > 99 ? "99+" : it.badge}
-                    </span>
-                  )}
-                </span>
+                <Icon className={cn("size-5", active && "fill-primary/15")} />
                 <span className="text-[10px] font-medium">{it.label}</span>
               </NavLink>
             </li>
