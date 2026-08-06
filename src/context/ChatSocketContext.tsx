@@ -60,6 +60,14 @@ export function ChatSocketProvider({
     Record<string, TypingUser[]>
   >({});
   const typingTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
+  // Tracks which conversation rooms we're currently supposed to be in, so
+  // they can be re-joined after a reconnect — Socket.IO room memberships
+  // don't survive one (a reconnect is a brand-new server-side socket that
+  // was never told to re-join anything). Without this, typing indicators
+  // and read receipts for an open conversation would silently go stale
+  // after any reconnect, the same way call signaling did (see
+  // CallContext's `onReconnect` and CHAT_INTEGRATION_ANALYSIS.md).
+  const joinedConversationsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!session?.token) {
@@ -74,6 +82,12 @@ export function ChatSocketProvider({
 
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);
+    const onReconnect = (attempt: number) => {
+      console.warn(`Chat socket reconnected (attempt ${attempt}).`);
+      joinedConversationsRef.current.forEach((conversationId) => {
+        socket.emit("join_conversation", { conversationId });
+      });
+    };
 
     const onNewMessage = (message: Message) => {
       // The server's `send_message` handler broadcasts to the whole
@@ -200,6 +214,7 @@ export function ChatSocketProvider({
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
+    socket.io.on("reconnect", onReconnect);
     socket.on("new_message", onNewMessage);
     socket.on("user_status_changed", onStatusChanged);
     socket.on("user_typing", onUserTyping);
@@ -211,6 +226,7 @@ export function ChatSocketProvider({
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
+      socket.io.off("reconnect", onReconnect);
       socket.off("new_message", onNewMessage);
       socket.off("user_status_changed", onStatusChanged);
       socket.off("user_typing", onUserTyping);
@@ -221,10 +237,12 @@ export function ChatSocketProvider({
   }, [session?.token, currentUser?.id]);
 
   const joinConversation = useCallback((conversationId: string) => {
+    joinedConversationsRef.current.add(conversationId);
     socketRef.current?.emit("join_conversation", { conversationId });
   }, []);
 
   const leaveConversation = useCallback((conversationId: string) => {
+    joinedConversationsRef.current.delete(conversationId);
     socketRef.current?.emit("leave_conversation", { conversationId });
   }, []);
 

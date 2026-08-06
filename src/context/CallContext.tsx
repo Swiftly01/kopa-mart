@@ -356,6 +356,34 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Socket.IO room memberships (and any per-socket `client.data` set on
+    // the server) do NOT survive a reconnect — a reconnect gets a brand
+    // new server-side socket, which was never told to (re)join
+    // `call:{callId}`. If that happens mid-call, every subsequent relayed
+    // event (`call_peer_joined`, `call_offer`, `call_answer`,
+    // `call_ice_candidate`) silently stops reaching this client, with
+    // nothing on either end logging an error — it just looks like the
+    // other side never sent anything. `handleJoin` on the backend accepts
+    // *either* the caller or the callee as a valid participant (it only
+    // checks `call.callerId/calleeId === userId`), so it doubles safely as
+    // a generic "make sure I'm still in this call's room" recovery call for
+    // both roles — re-emitting it after a reconnect re-establishes room
+    // membership and, as a side effect, re-triggers `call_peer_joined` so
+    // the caller re-sends a fresh SDP offer if negotiation had stalled.
+    const onReconnect = (attempt: number) => {
+      console.warn(`Call socket reconnected (attempt ${attempt}).`);
+      const current = callRef.current;
+      if (
+        current?.callId &&
+        (current.phase === "calling" ||
+          current.phase === "connecting" ||
+          current.phase === "connected")
+      ) {
+        socket.emit("call_join", { callId: current.callId });
+      }
+    };
+    socket.io.on("reconnect", onReconnect);
+
     socket.on("call_incoming", onIncoming);
     socket.on("call_peer_joined", onPeerJoined);
     socket.on("call_offer", onOffer);
@@ -371,6 +399,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     socket.on("exception", onException);
 
     return () => {
+      socket.io.off("reconnect", onReconnect);
       socket.off("call_incoming", onIncoming);
       socket.off("call_peer_joined", onPeerJoined);
       socket.off("call_offer", onOffer);

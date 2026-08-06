@@ -1,4 +1,5 @@
 import apiClient from "@/lib/utils/apiClient";
+import { apiBaseUrl } from "@/lib/utils/config";
 
 /**
  * ⚠️ BACKEND GAP — see CHAT_INTEGRATION_ANALYSIS.md, section "Missing endpoints".
@@ -39,7 +40,7 @@ export async function uploadChatMedia(
   formData.append("file", file);
 
   try {
-    const response = await apiClient.post("/messages/attachments", formData, {
+    const response = await apiClient.post(`${apiBaseUrl}/api/v1/messages/attachments`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
       signal,
       onUploadProgress: (evt) => {
