@@ -133,7 +133,7 @@ export default function ChatRoomPage() {
     });
   };
 
-  if (!currentUser) return <SignInPrompt />;
+  
 
   if (loadingConversation) {
     return (
