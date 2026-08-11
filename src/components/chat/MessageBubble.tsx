@@ -73,13 +73,13 @@ export function MessageBubble({
             <Avatar className="size-7">
               <AvatarImage
                 src={
-                  message.sender.profilePictureThumbnailUrl ||
-                  message.sender.profilePictureUrl ||
+                  message.sender?.profilePictureThumbnailUrl ||
+                  message.sender?.profilePictureUrl ||
                   undefined
                 }
               />
               <AvatarFallback className="text-[10px] bg-secondary text-secondary-foreground">
-                {getInitials(message.sender.firstName, message.sender.lastName)}
+                {getInitials(message.sender?.firstName, message.sender?.lastName)}
               </AvatarFallback>
             </Avatar>
           )}
@@ -89,7 +89,7 @@ export function MessageBubble({
       <div className={cn("flex flex-col max-w-[75%]", isOwn ? "items-end" : "items-start")}>
         {showSenderName && !isOwn && (
           <span className="px-1 mb-0.5 text-xs font-medium text-muted-foreground">
-            {message.sender.firstName}
+            {message.sender?.firstName}
           </span>
         )}
 
@@ -154,7 +154,7 @@ export function MessageBubble({
                 )}
               >
                 <p className="font-medium truncate">
-                  {repliedMessage.sender.firstName}
+                  {repliedMessage.sender?.firstName}
                 </p>
                 <p className="truncate opacity-80">
                   {repliedMessage.content || `[${repliedMessage.type}]`}

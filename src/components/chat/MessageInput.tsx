@@ -18,9 +18,39 @@ import { AttachmentPreviewBar } from "./AttachmentPreviewBar";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { useChatSocket } from "@/context/ChatSocketContext";
 import useSendMessage from "@/hooks/messages/mutations/useSendMessage";
-import { uploadChatMedia, ChatMediaUnavailableError } from "@/services/chatMediaService";
+import {
+  uploadChatMedia,
+  deleteChatMedia,
+  ChatMediaUnavailableError,
+} from "@/services/chatMediaService";
 import { Message, MessageType } from "@/types/chat";
 import { cn } from "@/lib/utils/utils";
+
+function resolveUploadErrorMessage(error: unknown): string {
+  if (error instanceof ChatMediaUnavailableError) {
+    return "Attachments aren't available right now.";
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error
+  ) {
+    const response = (error as { response?: { status?: number; data?: { message?: string | string[] } } })
+      .response;
+    const status = response?.status;
+    const serverMessage = response?.data?.message;
+
+    if (status === 413) {
+      return "File is too large (10MB max).";
+    }
+    if (status === 400 && serverMessage) {
+      return Array.isArray(serverMessage) ? serverMessage[0] : serverMessage;
+    }
+  }
+
+  return "Upload failed. Check your connection and try again.";
+}
 
 export interface StagedAttachment {
   file: File;
@@ -29,6 +59,7 @@ export interface StagedAttachment {
   status: "idle" | "uploading" | "ready" | "error";
   progress: number;
   uploadedUrl?: string;
+  uploadedPublicId?: string;
   errorMessage?: string;
 }
 
@@ -48,6 +79,7 @@ export function MessageInput({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const uploadAbortRef = useRef<AbortController | null>(null);
 
   const { startTyping, stopTyping } = useChatSocket();
   const sendMessage = useSendMessage();
@@ -65,6 +97,10 @@ export function MessageInput({
     };
   }, [attachment?.previewUrl]);
 
+  useEffect(() => {
+    return () => uploadAbortRef.current?.abort();
+  }, []);
+
   const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
     startTyping(conversationId);
@@ -74,22 +110,32 @@ export function MessageInput({
 
   const runUpload = useCallback(async (draft: StagedAttachment) => {
     setAttachment({ ...draft, status: "uploading", progress: 0, errorMessage: undefined });
+    const controller = new AbortController();
+    uploadAbortRef.current = controller;
     try {
-      const result = await uploadChatMedia(draft.file, (percent) => {
-        setAttachment((prev) =>
-          prev && prev.file === draft.file ? { ...prev, progress: percent } : prev,
-        );
-      });
+      const result = await uploadChatMedia(
+        draft.file,
+        (percent) => {
+          setAttachment((prev) =>
+            prev && prev.file === draft.file ? { ...prev, progress: percent } : prev,
+          );
+        },
+        controller.signal,
+      );
       setAttachment((prev) =>
         prev && prev.file === draft.file
-          ? { ...prev, status: "ready", uploadedUrl: result.url, progress: 100 }
+          ? {
+              ...prev,
+              status: "ready",
+              uploadedUrl: result.url,
+              uploadedPublicId: result.publicId,
+              progress: 100,
+            }
           : prev,
       );
     } catch (error) {
-      const message =
-        error instanceof ChatMediaUnavailableError
-          ? "Attachments aren't supported  yet."
-          : "Upload failed. Check your connection and try again.";
+      if (controller.signal.aborted) return; // cancelled by removeAttachment, no error UI needed
+      const message = resolveUploadErrorMessage(error);
       setAttachment((prev) =>
         prev && prev.file === draft.file
           ? { ...prev, status: "error", errorMessage: message }
@@ -125,6 +171,19 @@ export function MessageInput({
     setRecording(false);
     stageFile(file, "audio");
   };
+
+  const removeAttachment = useCallback(() => {
+    uploadAbortRef.current?.abort();
+    uploadAbortRef.current = null;
+    setAttachment((prev) => {
+      if (prev?.status === "ready" && prev.uploadedPublicId) {
+        // Best-effort cleanup; the user already decided to discard this
+        // attachment, so a failed delete shouldn't block the UI.
+        void deleteChatMedia(prev.uploadedPublicId).catch(() => {});
+      }
+      return null;
+    });
+  }, []);
 
   const handleSend = () => {
     const trimmed = text.trim();
@@ -204,7 +263,7 @@ export function MessageInput({
       {attachment && (
         <AttachmentPreviewBar
           attachment={attachment}
-          onRemove={() => setAttachment(null)}
+          onRemove={removeAttachment}
           onRetry={() => runUpload(attachment)}
         />
       )}
