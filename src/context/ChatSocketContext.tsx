@@ -262,12 +262,6 @@ export function ChatSocketProvider({
     (payload: SendMessagePayload): Promise<Message> => {
       const socket = socketRef.current;
 
-      // Realtime broadcast to other participants only happens via the
-      // socket path (see chat.gateway.ts `send_message`) — the REST
-      // POST /messages endpoint persists but never emits. We prefer the
-      // socket so the other side gets it instantly, and fall back to REST
-      // only when the socket is disconnected (message still saves, but the
-      // peer won't see it until they reload / reconnect and refetch).
       if (socket && socket.connected) {
         return new Promise<Message>((resolve, reject) => {
           socket.emit("send_message", payload, (response: Message | { message?: string }) => {

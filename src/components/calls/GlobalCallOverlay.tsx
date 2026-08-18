@@ -1,9 +1,12 @@
+
 import { useCall } from "@/context/CallContext";
 import { IncomingCallScreen } from "./IncomingCallScreen";
 import { OutgoingCallScreen } from "./OutgoingCallScreen";
 import { ActiveCallScreen } from "./ActiveCallScreen";
 import { CallEndedScreen } from "./CallEndedScreen";
 import { CallType } from "@/types/chat";
+import { useCallSound } from "@/hooks/calls/useCallSound";
+import { useCallNotification } from "@/hooks/calls/useCallNotification";
 
 const TERMINAL_PHASES = new Set([
   "declined",
@@ -29,6 +32,12 @@ export function GlobalCallOverlay() {
     toggleSpeaker,
   } = useCall();
 
+  
+  useCallSound(call?.phase);
+
+  
+  useCallNotification(call?.phase, call?.peerName, call?.type);
+
   if (!call) return null;
 
   if (TERMINAL_PHASES.has(call.phase)) {
@@ -45,10 +54,7 @@ export function GlobalCallOverlay() {
     return <OutgoingCallScreen call={call} onCancel={cancelCall} />;
   }
 
-  // "connecting" / "connected": video calls hand off to the dedicated
-  // /call/:callId route the instant they connect (see CallContext), so this
-  // modal only needs to cover voice calls, plus the brief video "connecting"
-  // window before that navigation happens.
+  
   if (call.type === CallType.VOICE || call.phase === "connecting") {
     return (
       <ActiveCallScreen

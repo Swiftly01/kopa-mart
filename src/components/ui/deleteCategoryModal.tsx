@@ -13,6 +13,7 @@ import appToast from "@/lib/appToast";
 import { Category } from "@/types/category";
 import useDeleteCategory from "@/hooks/admin/categories/mutations/useDeleteCategory";
 import { handleAxiosError } from "@/lib/utils/errors/errorHandler";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
 
 interface Props {
   category: Category;
@@ -50,8 +51,8 @@ const DeleteCategoryModal = ({ category, open, onClose }: Props) => {
           </div>
           <DialogDescription className="text-sm leading-relaxed pt-1">
             Are you sure you want to delete{" "}
-            <span className="font-semibold text-foreground">
-              {category.icon} {category.name}
+            <span className="font-semibold text-foreground inline-flex items-center gap-1">
+              <CategoryIcon icon={category.icon} /> {category.name}
             </span>
             ? This action cannot be undone.
             {category.children && category.children.length > 0 && (
@@ -65,7 +66,7 @@ const DeleteCategoryModal = ({ category, open, onClose }: Props) => {
 
         {/* Category summary card */}
         <div className="rounded-lg border bg-muted/30 p-3 flex items-center gap-3 my-1">
-          <span className="text-2xl">{category.icon}</span>
+          <span className="text-2xl"><CategoryIcon icon={category.icon} /></span>
           <div className="min-w-0">
             <p className="text-sm font-semibold truncate">{category.name}</p>
             <p className="text-xs text-muted-foreground font-mono">

@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
 
 interface FilterControlsProps {
   // Values
@@ -93,7 +94,10 @@ export const FilterControls = ({
           <SelectItem value="__all__">All Categories</SelectItem>
           {categories.map((c) => (
             <SelectItem key={c.name} value={c.id}>
-              {c.icon} {c.name}
+              <span className="inline-flex items-center gap-1.5">
+                <CategoryIcon icon={c.icon} />
+                {c.name}
+              </span>
             </SelectItem>
           ))}
         </SelectContent>

@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { IconPicker } from "@/components/ui/IconPicker";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
+import { DEFAULT_CATEGORY_ICON_NAME } from "@/lib/categoryIcons";
 import useStoreCategory from "@/hooks/admin/categories/mutations/useStoreCategory";
 import useGetCategories from "@/hooks/admin/categories/queries/useGetCategories";
 import appToast from "@/lib/appToast";
@@ -40,10 +43,7 @@ const categorySchema = z.object({
       /^[a-z0-9-_]+$/,
       "Only lowercase letters, numbers, hyphens and underscores",
     ),
-  icon: z
-    .string()
-    .min(1, "Icon emoji is required")
-    .max(8, "Keep it to one emoji"),
+  icon: z.string().min(1, "Please choose an icon"),
   name: z
     .string()
     .min(2, "Name must be at least 2 characters")
@@ -118,7 +118,7 @@ const CategoryForm = () => {
     resolver: zodResolver(categorySchema),
     defaultValues: {
       code: "",
-      icon: "✨",
+      icon: DEFAULT_CATEGORY_ICON_NAME,
       name: "",
       description: "",
       parentId: null,
@@ -177,7 +177,7 @@ const CategoryForm = () => {
         {/* Preview badge */}
         <div className="card-listing p-4 mb-6 flex items-center gap-3">
           <div className="size-11 rounded-xl bg-secondary flex items-center justify-center text-2xl flex-shrink-0">
-            {watchedIcon || "✨"}
+            <CategoryIcon icon={watchedIcon} />
           </div>
           <div className="min-w-0">
             <p className="font-semibold text-sm truncate">
@@ -206,18 +206,24 @@ const CategoryForm = () => {
 
             {/* Icon + Name row */}
             <div className="flex gap-3">
-              <Field label="Icon" error={errors.icon?.message} required>
-                <Input
-                  {...register("icon")}
-                  placeholder="📱"
-                  className={cn(
-                    "w-16 h-10 text-center text-lg",
-                    errors.icon &&
-                      "border-destructive focus-visible:ring-destructive",
-                  )}
-                  maxLength={8}
-                />
-              </Field>
+              <div className="w-40">
+                <Field label="Icon" error={errors.icon?.message} required>
+                  <Controller
+                    name="icon"
+                    control={control}
+                    render={({ field }) => (
+                      <IconPicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        className={cn(
+                          errors.icon &&
+                            "border-destructive focus-visible:ring-destructive",
+                        )}
+                      />
+                    )}
+                  />
+                </Field>
+              </div>
               <div className="flex-1">
                 <Field
                   label="Name"
@@ -306,7 +312,10 @@ const CategoryForm = () => {
                       </SelectItem>
                       {categories?.data?.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
-                          <span className="mr-1">{c.icon}</span> {c.name}
+                          <span className="inline-flex items-center gap-1.5">
+                            <CategoryIcon icon={c.icon} />
+                            {c.name}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>

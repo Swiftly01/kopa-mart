@@ -30,6 +30,8 @@ import appToast from "@/lib/appToast";
 import { Category } from "@/types/category";
 import useUpdateCategory from "@/hooks/admin/categories/mutations/useUpdateCategory";
 import useGetCategories from "@/hooks/admin/categories/queries/useGetCategories";
+import { IconPicker } from "@/components/ui/IconPicker";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
 
 // ─── Schema (same rules as create, all fields optional for patch) ─────────────
 
@@ -42,7 +44,7 @@ const editSchema = z.object({
       /^[a-z0-9-_]+$/,
       "Only lowercase letters, numbers, hyphens and underscores",
     ),
-  icon: z.string().min(1).max(8),
+  icon: z.string().min(1, "Please choose an icon"),
   name: z.string().min(2).max(64),
   description: z.string().max(256).optional(),
   parentId: z.string().nullable().default(null),
@@ -153,7 +155,9 @@ const EditCategoryModal = ({ category, open, onClose }: Props) => {
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <span className="text-xl">{category.icon ?? "📁"}</span>
+            <span className="text-xl">
+              <CategoryIcon icon={category.icon} />
+            </span>
             Edit Category
           </DialogTitle>
         </DialogHeader>
@@ -165,18 +169,24 @@ const EditCategoryModal = ({ category, open, onClose }: Props) => {
         >
           {/* Icon + Name */}
           <div className="flex gap-3">
-            <Field label="Icon" error={errors.icon?.message} required>
-              <Input
-                {...register("icon")}
-                placeholder="📱"
-                className={cn(
-                  "w-16 h-10 text-center text-lg",
-                  errors.icon &&
-                    "border-destructive focus-visible:ring-destructive",
-                )}
-                maxLength={8}
-              />
-            </Field>
+            <div className="w-40">
+              <Field label="Icon" error={errors.icon?.message} required>
+                <Controller
+                  name="icon"
+                  control={control}
+                  render={({ field }) => (
+                    <IconPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      className={cn(
+                        errors.icon &&
+                          "border-destructive focus-visible:ring-destructive",
+                      )}
+                    />
+                  )}
+                />
+              </Field>
+            </div>
             <div className="flex-1">
               <Field
                 label="Name"
@@ -261,7 +271,7 @@ const EditCategoryModal = ({ category, open, onClose }: Props) => {
                     {parentOptions.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         <div className="flex items-center gap-2">
-                          <span>{c.icon ?? "📁"}</span>
+                          <CategoryIcon icon={c.icon} />
                           <span>{c.name}</span>
                         </div>
                       </SelectItem>

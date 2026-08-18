@@ -28,6 +28,7 @@ import {
 import useGetProductBySlug from "@/hooks/products/queries/useGetProductBySlug";
 import useDeleteListing from "@/hooks/admin/products/mutations/useDeleteListing";
 import { formatNaira } from "@/lib/utils/utils";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
 
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -408,7 +409,7 @@ const AdminListingDetail = () => {
                   value={
                     <div className="flex items-center gap-1.5">
                       {product.category?.icon && (
-                        <span>{product.category.icon}</span>
+                        <span><CategoryIcon icon={product.category.icon} /></span>
                       )}
                       <span>{product.category?.name ?? "—"}</span>
                       {product.category?.parentId && (

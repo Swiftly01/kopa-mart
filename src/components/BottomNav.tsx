@@ -1,6 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Home, Heart, Plus, User, Moon, Sun, MessageCircle } from "lucide-react";
-import { useStore } from "@/store/useStore";
+import { Home, Heart, Plus, User, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import useUser from "@/hooks/users/queries/useUser";
 import useUnreadMessages from "@/hooks/messages/queries/useUnreadMessages";
@@ -13,8 +12,6 @@ export const BottomNav = () => {
   const { data: user } = useUser();
   const { data: unreadRows } = useUnreadMessages();
   const totalUnread = unreadRows?.reduce((sum, row) => sum + row.unreadCount, 0) ?? 0;
-  const theme = useStore((s) => s.theme);
-  const setTheme = useStore((s) => s.setTheme);
 
   const handleSell = () => {
     // Not logged in or no onboarding data → start onboarding
@@ -47,12 +44,6 @@ export const BottomNav = () => {
     { to: "/saved", label: "Saved", icon: Heart },
     { sell: true, label: "Sell", icon: Plus },
     { to: "/messages", label: "Messages", icon: MessageCircle, badge: totalUnread },
-
-    // {
-    //   action: () => setTheme(theme === "dark" ? "light" : "dark"),
-    //   label: theme === "dark" ? "Light" : "Dark",
-    //   icon: theme === "dark" ? Sun : Moon,
-    // },
     { to: "/profile", label: "Profile", icon: User },
   ] as const;
 

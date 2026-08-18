@@ -31,6 +31,7 @@ import { handleAxiosError } from "@/lib/utils/errors/errorHandler";
 import useGetProduct from "@/hooks/products/queries/useGetProduct";
 import type { ProductImage } from "@/types/product"; // adjust path as needed
 import useDeleteProductImage from "@/hooks/products/mutations/useDeleteProductImage";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
 const MAX_IMAGES = 6;
@@ -420,7 +421,10 @@ const CreateListing = () => {
                 <SelectContent>
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.icon} {c.name}
+                      <span className="inline-flex items-center gap-1.5">
+                        <CategoryIcon icon={c.icon} />
+                        {c.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

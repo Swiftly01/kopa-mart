@@ -19,6 +19,7 @@ import { ProductGrid } from "@/components/ui/productGrid";
 import { ITEMS_PER_PAGE } from "@/lib/utils/config";
 import { SellerCTA } from "@/components/ui/sellerCta";
 import NotificationBell from "@/components/ui/NotificationBell";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -242,7 +243,7 @@ const Index = () => {
                         className="flex flex-col items-center gap-2 w-[72px] shrink-0"
                       >
                         <div className="flex items-center justify-center text-2xl size-16 rounded-2xl bg-secondary">
-                          {c.icon}
+                          <CategoryIcon icon={c.icon} />
                         </div>
                         <span className="text-[11px] text-center leading-tight">
                           {c.name}
@@ -266,7 +267,7 @@ const Index = () => {
                       className="flex flex-col items-center gap-2 w-[72px]"
                     >
                       <div className="flex items-center justify-center text-2xl transition-transform size-16 rounded-2xl bg-secondary hover:scale-105">
-                        {c.icon}
+                        <CategoryIcon icon={c.icon} />
                       </div>
                       <span className="text-[11px] text-center leading-tight">
                         {c.name}

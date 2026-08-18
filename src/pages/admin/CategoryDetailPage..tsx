@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils/utils";
 import useGetCategory from "@/hooks/admin/categories/queries/useGetCategory";
 import EditCategoryModal from "@/components/ui/editCategoryModal";
 import DeleteCategoryModal from "@/components/ui/deleteCategoryModal";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
 
 const InfoRow = ({
   icon,
@@ -123,7 +124,7 @@ const CategoryDetailPage = () => {
         <div className="card-listing rounded-xl p-5 flex items-start justify-between gap-4">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="size-14 rounded-2xl bg-secondary flex items-center justify-center text-3xl shrink-0">
-              {category.icon}
+              <CategoryIcon icon={category.icon} />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -205,7 +206,7 @@ const CategoryDetailPage = () => {
                   }
                   className="flex items-center gap-1.5 text-primary hover:underline"
                 >
-                  <span>{category.parent.icon}</span>
+                  <span><CategoryIcon icon={category.parent.icon} /></span>
                   {category.parent.name}
                 </button>
               ) : (
@@ -247,7 +248,7 @@ const CategoryDetailPage = () => {
                   }
                   className="card-listing rounded-xl p-3 flex items-center gap-2.5 hover:bg-muted/50 transition-colors text-left group"
                 >
-                  <span className="text-xl">{child.icon}</span>
+                  <span className="text-xl"><CategoryIcon icon={child.icon} /></span>
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{child.name}</p>
                     <p className="text-xs text-muted-foreground font-mono">

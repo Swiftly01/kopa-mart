@@ -28,6 +28,7 @@ import useGetCategories from "@/hooks/admin/categories/queries/useGetCategories"
 import { useDebounce } from "@/hooks/useDebounce";
 import { Category } from "@/types/category";
 import { ITEMS_PER_PAGE } from "@/lib/utils/config";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
 
 
 
@@ -207,7 +208,7 @@ const CategoryListPage = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 text-xl leading-none">
-                            {cat.icon}
+                            <CategoryIcon icon={cat.icon} />
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">
@@ -234,7 +235,7 @@ const CategoryListPage = () => {
                       <td className="px-6 py-4 hidden md:table-cell">
                         {cat.parent ? (
                           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <span>{cat.parent.icon}</span>
+                            <CategoryIcon icon={cat.parent.icon} />
                             <span>{cat.parent.name}</span>
                           </div>
                         ) : (

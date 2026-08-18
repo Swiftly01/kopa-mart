@@ -1,11 +1,13 @@
 import SignInPrompt from "@/components/SignInPrompt";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import useUser from "@/hooks/users/queries/useUser";
 import useUpdateAvatar from "@/hooks/users/mutations/useUpdateAvatar";
 import appToast from "@/lib/appToast";
 import { isAdmin, isSuperAdmin } from "@/lib/utils/authRoles";
+import { useStore } from "@/store/useStore";
 import {
   Bell,
   Camera,
@@ -14,11 +16,13 @@ import {
   Loader2,
   LogOut,
   MessageCircle,
+  Moon,
   Pencil,
   Plus,
   Settings,
   ShieldCheck,
   Smartphone,
+  Sun,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -50,6 +54,8 @@ const Profile = () => {
   const { data: user, isLoading } = useUser();
   const { logOut } = useAuth();
   const { mutate: uploadAvatar, isPending: isUploading } = useUpdateAvatar();
+  const theme = useStore((s) => s.theme);
+  const setTheme = useStore((s) => s.setTheme);
 
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -232,6 +238,28 @@ const Profile = () => {
         open={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
       />
+
+      {/* ── Dark mode toggle ─────────────────────────────────────────────── */}
+      <div className="flex items-center w-full gap-3 p-4 card-listing">
+        <div className="flex items-center justify-center size-10 rounded-xl bg-primary/15 text-primary">
+          {theme === "dark" ? (
+            <Moon className="size-5" />
+          ) : (
+            <Sun className="size-5" />
+          )}
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium">Dark Mode</p>
+          <p className="text-xs text-muted-foreground">
+            {theme === "dark" ? "On" : "Off"} · switch the app's appearance
+          </p>
+        </div>
+        <Switch
+          checked={theme === "dark"}
+          onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+          aria-label="Toggle dark mode"
+        />
+      </div>
 
       {(() => {
         const status = user.sellerOnboarding?.status;
