@@ -300,7 +300,7 @@ const ListingDetail = () => {
           </div>
 
           {/* CTA buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <button
               type="button"
               onClick={handleMessageSeller}
@@ -318,7 +318,7 @@ const ListingDetail = () => {
               className="flex items-center justify-center h-12 gap-2 px-5 font-semibold text-white transition-colors rounded-full shadow-sm bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700"
               aria-label="Chat on WhatsApp"
             >
-              <MessageCircle className="size-4" />
+             <MessageCircle className="size-4" /> Whatsapp
             </a>
             {sellerPhone ? (
               <a
