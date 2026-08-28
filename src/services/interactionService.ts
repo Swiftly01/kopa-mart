@@ -6,10 +6,10 @@ import {
 } from "@/types/interaction";
 
 export class InteractionService {
-  
   static async record(
     payload: CreateInteractionPayload,
   ): Promise<CreateInteractionResponse> {
+    console.log(payload);
     const response = await apiClient.post(
       `${apiBaseUrl}/api/v1/interaction`,
       payload,
