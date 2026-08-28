@@ -14,6 +14,7 @@ export class InteractionService {
       `${apiBaseUrl}/api/v1/interaction`,
       payload,
     );
+    console.log(payload);
     return response.data;
   }
 }

@@ -34,6 +34,9 @@ messaging.onBackgroundMessage((payload) => {
 
   const data = payload.data ?? {};
 
+  console.log(data);
+  console.log(data.image);
+
   self.registration.showNotification(data.title ?? "KopaMart", {
     body: data.body,
     icon: data.icon || "/icons/icon-192.png",
