@@ -30,7 +30,6 @@ const messaging = firebase.messaging();
 
 
 messaging.onBackgroundMessage((payload) => {
-  console.log("Background payload:", payload);
 
   const data = payload.data ?? {};
 
