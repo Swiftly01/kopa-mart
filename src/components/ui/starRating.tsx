@@ -55,7 +55,8 @@ export function StarRating({
 }: StarRatingProps) {
   const [hovered, setHovered] = useState<number | null>(null);
   const interactive = !!onChange && !disabled;
-  const displayValue = hovered ?? value;
+  const numericValue = Number(value);
+  const displayValue = hovered ?? numericValue;
 
   return (
     <div className={cn("flex items-center gap-1.5", className)}>
@@ -66,7 +67,7 @@ export function StarRating({
         aria-label={
           interactive
             ? "Select a star rating"
-            : `Rated ${value.toFixed(1)} out of 5 stars`
+            : `Rated ${numericValue.toFixed(1)} out of 5 stars`
         }
       >
         {Array.from({ length: 5 }).map((_, i) => {
@@ -112,7 +113,7 @@ export function StarRating({
 
       {showValue && (
         <span className={cn("font-medium text-amber-600", textSizeMap[size])}>
-          {value.toFixed(1)}
+          {numericValue.toFixed(1)}
           {typeof reviewCount === "number" && reviewCount > 0 && (
             <span className="ml-1 font-normal text-muted-foreground">
               ({reviewCount.toLocaleString()}{" "}
