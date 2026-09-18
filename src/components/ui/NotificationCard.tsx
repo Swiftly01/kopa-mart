@@ -1,7 +1,9 @@
-import { Check, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Check, Eye, Trash2 } from "lucide-react";
 import { NotificationItem } from "@/types/notification";
 import { getNotificationVisual } from "@/lib/utils/notificationVisuals";
-import { formatNotificationDate, formatRelativeTime } from "@/lib/utils/formatRelativeTime";
+import { getNotificationImage, getNotificationLink } from "@/lib/utils/notificationLink";
+import { formatNotificationDate } from "@/lib/utils/formatRelativeTime";
 
 interface NotificationCardProps {
   notification: NotificationItem;
@@ -16,13 +18,12 @@ export default function NotificationCard({
   onToggleRead,
   onDelete,
 }: NotificationCardProps) {
+  const [imageFailed, setImageFailed] = useState(false);
   const isUnread = !notification.readAt;
-  const { icon: Icon, className: iconClassName } = getNotificationVisual(
-    notification.type,
-    notification.channel,
-  );
-
-  
+  const { icon: Icon, className: iconClassName } =
+    getNotificationVisual(notification);
+  const link = getNotificationLink(notification);
+  const image = getNotificationImage(notification);
 
   return (
     <div
@@ -35,11 +36,21 @@ export default function NotificationCard({
         <span className="absolute inline-flex rounded-full top-4 left-1.2 size-1.5 bg-primary" />
       )}
 
-      <div
-        className={`flex items-center justify-center shrink-0 size-10 rounded-xl ${iconClassName}`}
-      >
-        <Icon className="size-5" />
-      </div>
+      {/* Product image takes over the icon slot when the payload has one, so the row previews what it's about */}
+      {image && !imageFailed ? (
+        <img
+          src={image}
+          alt=""
+          onError={() => setImageFailed(true)}
+          className="object-cover shrink-0 size-10 rounded-xl border"
+        />
+      ) : (
+        <div
+          className={`flex items-center justify-center shrink-0 size-10 rounded-xl ${iconClassName}`}
+        >
+          <Icon className="size-5" />
+        </div>
+      )}
 
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
@@ -57,6 +68,18 @@ export default function NotificationCard({
             {notification.body}
           </p>
         )}
+
+        {/* View details — always available; labelled with the link target when there is one */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen(notification);
+          }}
+          className="mt-2 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+        >
+          <Eye className="size-3.5" />
+          {link ? link.label : "View details"}
+        </button>
       </div>
 
       {/* Action buttons — stopPropagation so tapping them doesn't also trigger onOpen */}

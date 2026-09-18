@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { BellOff, CheckCheck, Loader2 } from "lucide-react";
 import SignInPrompt from "@/components/SignInPrompt";
 import useUser from "@/hooks/users/queries/useUser";
@@ -14,6 +14,7 @@ import useDeleteNotification from "@/hooks/notifications/mutation/useDeleteNotif
 import { useInfiniteScrollSentinel } from "@/hooks/notifications/useInfiniteScrollSentinel";
 import NotificationCardSkeleton from "@/components/ui/NotificationCardSkeleton";
 import NotificationCard from "@/components/ui/NotificationCard";
+import NotificationDetailModal from "@/components/ui/NotificationDetailModal";
 
 const Notification = () => {
   const { data: user, isLoading: isUserLoading } = useUser();
@@ -26,6 +27,8 @@ const Notification = () => {
     hasNextPage,
     isFetchingNextPage,
   } = useNotificationsInfinite();
+
+  const [selected, setSelected] = useState<NotificationItem | null>(null);
 
   const { data: unreadCountData } = useUnreadCount();
   const { mutate: markRead } = useMarkNotificationRead();
@@ -53,15 +56,28 @@ const Notification = () => {
 
   const handleOpen = (notification: NotificationItem) => {
     if (!notification.readAt) markRead(notification.id);
-    
+    setSelected(notification);
   };
 
   const handleToggleRead = (notification: NotificationItem) => {
     if (notification.readAt) markUnread(notification.id);
     else markRead(notification.id);
+
+    // Keep an open modal in sync with the row it was launched from
+    setSelected((current) =>
+      current && current.id === notification.id
+        ? {
+            ...current,
+            readAt: notification.readAt ? null : new Date().toISOString(),
+          }
+        : current,
+    );
   };
 
   const handleDelete = (notification: NotificationItem) => {
+    setSelected((current) =>
+      current && current.id === notification.id ? null : current,
+    );
     deleteNotification(notification.id, {
       onError: () =>
         appToast({
@@ -157,6 +173,14 @@ const Notification = () => {
           )}
         </div>
       )}
+
+      {/* -- Detail modal -- */}
+      <NotificationDetailModal
+        notification={selected}
+        onClose={() => setSelected(null)}
+        onToggleRead={handleToggleRead}
+        onDelete={handleDelete}
+      />
     </div>
   );
 };

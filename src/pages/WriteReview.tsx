@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "@/components/ui/starRating";
 import useGetProductBySlug from "@/hooks/products/queries/useGetProductBySlug";
+import useGetProduct from "@/hooks/products/queries/useGetProduct";
 import useUser from "@/hooks/users/queries/useUser";
 import useGetReviewEligibility from "@/hooks/reviews/queries/useGetReviewEligibility";
 import useCreateReview from "@/hooks/reviews/mutations/useCreateReview";
@@ -17,12 +18,25 @@ import { handleAxiosError } from "@/lib/utils/errors/errorHandler";
 
 const MAX_COMMENT_LENGTH = 2000;
 
+// Matches a raw UUID so "/listing/:slug/review" can also be reached with a
+// product id — that's all a review-request notification's payload carries.
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const WriteReview = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug: param } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
-  const { data: product, isLoading: isProductLoading } =
-    useGetProductBySlug(slug);
+  const isId = !!param && UUID_PATTERN.test(param);
+
+  const { data: productBySlug, isLoading: isSlugLoading } =
+    useGetProductBySlug(isId ? undefined : param);
+  const { data: productById, isLoading: isIdLoading } = useGetProduct(
+    isId ? param : undefined,
+  );
+
+  const product = isId ? productById : productBySlug;
+  const isProductLoading = isId ? isIdLoading : isSlugLoading;
   const { data: user } = useUser();
   const isBuyer = user?.role === "buyer";
 

@@ -308,7 +308,7 @@ const ListingDetail = () => {
               className="flex items-center justify-center flex-1 h-12 gap-2 font-semibold text-white transition-colors rounded-full shadow-sm bg-gradient-primary disabled:opacity-60"
             >
               <MessageCircle className="size-4" />
-              {startingChat ? "Opening chat…" : "Message Seller"}
+              {startingChat ? "Opening chat…" : "Chat Seller"}
             </button>
             <a
               href={`https://wa.me/${waNumber}?text=${waMsg}`}

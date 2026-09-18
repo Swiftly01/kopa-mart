@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
-import { Heart, MapPin, Tag } from "lucide-react";
+import { Heart, MapPin, Star, Tag } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Product } from "@/types/product";
-import { StarRating } from "@/components/ui/starRating";
 import { useGetSaveStatus } from "@/hooks/saved-products/queries/useGetSaveStatus";
 import { useToggleSavedProduct } from "@/hooks/saved-products/mutations/usetoggleSavedProduct";
 
@@ -78,10 +77,24 @@ export const ListingCard = ({ listing }: { listing: Product }) => {
       {/* ── Info ── */}
       <div className="p-3 space-y-1">
         <h3 className="font-medium text-sm line-clamp-1">{listing.name}</h3>
-        <p className="font-bold text-primary">{formatNaira(listing.price)}</p>
-        {reviewCount > 0 && (
-          <StarRating value={rating} showValue reviewCount={reviewCount} size="xs" />
-        )}
+
+        {/* Price and rating share a row so the card is the same height whether or not it has reviews */}
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-bold text-primary">{formatNaira(listing.price)}</p>
+          {reviewCount > 0 && (
+            <span className="flex items-center gap-0.5 text-xs font-medium text-amber-600 shrink-0">
+              <Star
+                className="size-3.5 fill-amber-400 stroke-amber-500"
+                strokeWidth={1.5}
+              />
+              {rating.toFixed(1)}
+              <span className="font-normal text-muted-foreground">
+                ({reviewCount})
+              </span>
+            </span>
+          )}
+        </div>
+
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="size-3 shrink-0" />
           <span className="line-clamp-1">
