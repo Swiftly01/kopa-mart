@@ -15,6 +15,9 @@ export const savedProductKeys = {
   list: (params: GetSavedProductsParams = {}) =>
     [...savedProductKeys.all, "list", params] as const,
 
+  /** Saved ads (the ones posted through the ad form) */
+  ads: () => [...savedProductKeys.all, "ads"] as const,
+
   /** Total count badge */
   count: () => [...savedProductKeys.all, "count"] as const,
 };

@@ -2,6 +2,8 @@ import { useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Heart, Loader2 } from "lucide-react";
 import { ListingCard } from "@/components/ListingCard";
+import AdCard from "@/components/ads/AdCard";
+import { useGetSavedAds } from "@/hooks/saved-products/queries/useGetSavedAds";
 import { Product } from "@/types/product";
 import { useGetSavedProductsInfinite } from "@/hooks/saved-products/queries/usegetsavedproductsinfinite";
 import { ITEMS_PER_PAGE } from "@/lib/utils/config";
@@ -23,8 +25,12 @@ const Saved = () => {
     [data],
   );
 
+  const { data: savedAds } = useGetSavedAds();
+  const ads = savedAds?.data ?? [];
+
   // Total from the real meta envelope
-  const totalCount = data?.pages[0]?.meta.totalItems ?? 0;
+  const totalCount =
+    (data?.pages[0]?.meta.totalItems ?? 0) + (savedAds?.meta.totalItems ?? 0);
 
   // ── Infinite scroll sentinel ──────────────────────────────────────────────
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -97,7 +103,7 @@ const Saved = () => {
   }
 
   // ── Empty state ───────────────────────────────────────────────────────────
-  if (items.length === 0) {
+  if (items.length === 0 && ads.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
         <h1 className="font-bold text-lg">Saved listings</h1>
@@ -132,6 +138,18 @@ const Saved = () => {
         </p>
       </div>
 
+      {ads.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-sm font-semibold">Saved ads</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {ads.map((ad) => (
+              <AdCard key={ad.id} ad={ad} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {items.length > 0 && <h2 className="text-sm font-semibold">Saved products</h2>}
       <div ref={gridRef} className="grid grid-cols-2 gap-3">
         {items.map((product, i) => (
           <div

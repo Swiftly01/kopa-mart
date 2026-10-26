@@ -7,10 +7,11 @@ import {
   MessageCircle,
   Phone,
 } from "lucide-react";
-import useGetProductsInfinite from "@/hooks/products/queries/useGetProductsInfinite";
 import { ProductGrid } from "@/components/ui/productGrid";
 import { StarRating } from "@/components/ui/starRating";
 import useGetSellerProductsInfinite from "@/hooks/seller/queries/useGetSellerProductsInfinite";
+import useGetAdsInfinite from "@/hooks/listings/queries/useGetAdsInfinite";
+import useGetPublicAd from "@/hooks/listings/queries/useGetPublicAd";
 import useUser from "@/hooks/users/queries/useUser";
 import useCreateConversation from "@/hooks/chat/mutations/useCreateConversation";
 
@@ -21,18 +22,62 @@ const SellerProfile = () => {
   const navigate = useNavigate();
   const { data: currentUser } = useUser();
   const createConversation = useCreateConversation();
-  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useGetSellerProductsInfinite({ limit: ITEMS_PER_PAGE, sellerId: id! });
+  // Ads (new listings system) and legacy products are both shown on the profile.
+  const ads = useGetAdsInfinite({ limit: ITEMS_PER_PAGE, sellerId: id }, !!id);
+  const legacy = useGetSellerProductsInfinite({
+    limit: ITEMS_PER_PAGE,
+    sellerId: id!,
+  });
 
-  const products = useMemo(
-    () => data?.pages.flatMap((p) => p.data) ?? [],
-    [data],
+  const adItems = useMemo(
+    () =>
+      (ads.data?.pages.flatMap((p) => p.data) ?? []).map((data) => ({
+        kind: "ad" as const,
+        data,
+      })),
+    [ads.data],
   );
-  const totalCount = data?.pages[0]?.meta.totalItems ?? 0;
+  const productItems = useMemo(
+    () =>
+      (legacy.data?.pages.flatMap((p) => p.data ?? []) ?? []).map((data) => ({
+        kind: "product" as const,
+        data,
+      })),
+    [legacy.data],
+  );
+  const products = useMemo(
+    () => [...adItems, ...productItems],
+    [adItems, productItems],
+  );
 
-  // Derive seller info from the first product's seller object
-  const seller = products[0]?.seller;
-  const firstProduct = products[0];
+  const isLoading = ads.isLoading || legacy.isLoading;
+  const isFetchingNextPage = ads.isFetchingNextPage || legacy.isFetchingNextPage;
+  const hasNextPage = ads.hasNextPage || legacy.hasNextPage;
+  const fetchNextPage = () => {
+    if (ads.hasNextPage) ads.fetchNextPage();
+    if (legacy.hasNextPage) legacy.fetchNextPage();
+  };
+  const totalCount =
+    (ads.data?.pages[0]?.meta.totalItems ?? 0) +
+    (legacy.data?.pages[0]?.meta?.totalItems ?? 0);
+
+  // Ad cards carry no seller info, so read it from the first ad's detail page
+  const firstAd = adItems[0]?.data;
+  const { data: firstAdDetail } = useGetPublicAd(firstAd?.slug ?? "");
+  const firstProduct = productItems[0]?.data;
+
+  const adSeller = firstAdDetail?.seller;
+  const seller = adSeller
+    ? {
+        firstName: adSeller.name,
+        lastName: "",
+        phoneNumber: adSeller.phoneNumber,
+        status: adSeller.isEmailVerified ? "active" : "",
+        sellerReviewCount: 0,
+        sellerAverageRating: 0,
+      }
+    : (firstProduct?.seller as any);
+  const locationSource = firstAd ?? firstProduct;
 
   // ── Infinite scroll sentinel ───────────────────────────────────────────────
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -92,8 +137,8 @@ const SellerProfile = () => {
     ? `${seller.firstName} ${seller.lastName}`.trim()
     : "Seller";
   const phone = seller?.phoneNumber ?? "";
-  const location = firstProduct
-    ? `${firstProduct.lgaName}, ${firstProduct.stateName}`
+  const location = locationSource
+    ? `${locationSource.lgaName}, ${locationSource.stateName}`
     : "";
   const verified = seller?.status === "active";
 

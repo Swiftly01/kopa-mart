@@ -17,6 +17,8 @@ interface ReviewsSectionProps {
   productId: string;
   sellerId: string;
   slug: string;
+  // where the write/edit review page lives (defaults to the product one)
+  reviewPath?: string;
   rating: number;
   reviewCount: number;
 }
@@ -27,6 +29,7 @@ export function ReviewsSection({
   productId,
   sellerId,
   slug,
+  reviewPath = `/listing/${slug}/review`,
   rating,
   reviewCount,
 }: ReviewsSectionProps) {
@@ -86,7 +89,7 @@ export function ReviewsSection({
         ) : isBuyer && !isEligibilityLoading ? (
           eligibility?.alreadyReviewed ? (
             <Link
-              to={`/listing/${slug}/review`}
+              to={reviewPath}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:text-emerald-700"
             >
               <PenLine className="size-3.5" />
@@ -94,7 +97,7 @@ export function ReviewsSection({
             </Link>
           ) : eligibility?.eligible ? (
             <Link
-              to={`/listing/${slug}/review`}
+              to={reviewPath}
               className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-colors"
             >
               <Star className="size-3.5" />
@@ -124,7 +127,7 @@ export function ReviewsSection({
                 isOwn={review.id === myReviewId}
                 onEdit={
                   review.id === myReviewId
-                    ? () => navigate(`/listing/${slug}/review`)
+                    ? () => navigate(reviewPath)
                     : undefined
                 }
                 onDelete={

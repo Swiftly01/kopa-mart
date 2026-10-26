@@ -1,5 +1,6 @@
 import { Loader2 } from "lucide-react";
 import { ListingCard } from "@/components/ListingCard";
+import AdCard from "@/components/ads/AdCard";
 
 interface ProductGridProps {
   products: any[];
@@ -58,11 +59,12 @@ export const ProductGrid = ({
         className={`grid gap-3 ${cols === 4 ? "grid-cols-4" : "grid-cols-2"}`}
       >
         {products.map((l, i) => (
-          <div
-            key={l.id}
-            className="fade-up"
-          >
-            <ListingCard listing={l} />
+          <div key={`${l.kind}-${l.data.id}`} className="fade-up">
+            {l.kind === "ad" ? (
+              <AdCard ad={l.data} />
+            ) : (
+              <ListingCard listing={l.data} />
+            )}
           </div>
           // <div
           //   key={l.id}

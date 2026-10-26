@@ -1,16 +1,18 @@
 import { ReactNode } from "react";
 import { Link, useLocation, Navigate } from "react-router-dom";
 import { useCurrentUser } from "@/store/useStore";
-import { LayoutDashboard, Loader2, Plus } from "lucide-react";
+import { LayoutDashboard, Loader2, Plus, Tag } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import useUser from "@/hooks/users/queries/useUser";
+import useHasLegacyProducts from "@/hooks/products/queries/useHasLegacyProducts";
 import SignInPrompt from "./SignInPrompt";
 
 export const SellerShell = ({ children }: { children: ReactNode }) => {
   // const user = useCurrentUser();
   const { data: user, isLoading } = useUser();
   const { pathname } = useLocation();
+  const { data: hasLegacy } = useHasLegacyProducts(user?.role === "seller");
 
   if (isLoading) {
     return <Loader2 className="mx-auto size-12 animate-spin text-primary" />;
@@ -33,13 +35,19 @@ export const SellerShell = ({ children }: { children: ReactNode }) => {
     );
   }
 
+  // the old-products tab only shows for sellers who still have old products
   const tabs = [
-    {
-      to: "/seller-dashboard/manage-listings",
-      label: "Manage",
-      icon: LayoutDashboard,
-    },
-    { to: "/seller-dashboard/create-listing", label: "Add new", icon: Plus },
+    ...(hasLegacy
+      ? [
+          {
+            to: "/seller-dashboard/manage-listings",
+            label: "Old products",
+            icon: LayoutDashboard,
+          },
+        ]
+      : []),
+    { to: "/my-ads", label: "My ads", icon: Tag },
+    { to: "/post-ad", label: "Post ad", icon: Plus },
   ];
   return (
     <div className="max-w-2xl mx-auto px-4 pt-4">
