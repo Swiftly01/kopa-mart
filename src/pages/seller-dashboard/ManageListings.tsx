@@ -1,3 +1,4 @@
+import SellerAds from "@/components/ads/SellerAds";
 import { SellerShell } from "@/components/SellerShell";
 import { Button } from "@/components/ui/button";
 import DeleteModal from "@/components/ui/deleteProductModal";
@@ -46,7 +47,8 @@ const DEFAULT_FILTERS: FilterState = {
   sortBy: "",
 };
 
-const ManageListings = () => {
+// the seller's older products (posted before ads existed); edit and delete still work
+const OlderProducts = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentPage = Math.max(1, Number(searchParams.get("page") || "1"));
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -160,7 +162,7 @@ const ManageListings = () => {
 
   if (isError) {
     return (
-      <SellerShell>
+      <>
         <div className="flex items-center justify-center min-h-96">
           <div className="space-y-3 text-center">
             <div className="flex items-center justify-center mx-auto rounded-full size-12 bg-destructive/10">
@@ -174,16 +176,16 @@ const ManageListings = () => {
             </div>
           </div>
         </div>
-      </SellerShell>
+      </>
     );
   }
 
   return (
-    <SellerShell>
+    <>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-lg font-semibold leading-none">My Listings</h1>
+          <h2 className="text-base font-semibold leading-none">Older products</h2>
           {!isLoading && (
             <p className="mt-1 text-xs text-muted-foreground">
               {totalCount.toLocaleString()}{" "}
@@ -191,12 +193,6 @@ const ManageListings = () => {
             </p>
           )}
         </div>
-        <Button asChild size="sm" className="bg-gradient-primary gap-1.5">
-          <Link to="/seller-dashboard/create-listing">
-            <Plus className="size-3.5" />
-            Add listing
-          </Link>
-        </Button>
       </div>
 
       {/* Search + controls row */}
@@ -361,15 +357,15 @@ const ManageListings = () => {
             <Package className="size-7 text-muted-foreground/60" />
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-medium">No listings yet</p>
+            <p className="text-sm font-medium">No older products</p>
             <p className="text-xs text-muted-foreground max-w-56">
-              Create your first listing to start selling.
+              Products you uploaded before ads appear here.
             </p>
           </div>
           <Button asChild size="sm" className="bg-gradient-primary">
-            <Link to="/seller-dashboard/create-listing">
+            <Link to="/post-ad">
               <Plus className="mr-1 size-4" />
-              Create listing
+              Post an ad
             </Link>
           </Button>
         </div>
@@ -451,6 +447,41 @@ const ManageListings = () => {
         onConfirm={handleDelete}
         isPending={deleteMutation.isPending}
       />
+    </>
+  );
+};
+
+// seller dashboard: ads first, older products in their own tab
+const ManageListings = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") === "products" ? "products" : "ads";
+
+  return (
+    <SellerShell>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex gap-1 p-1 rounded-xl bg-secondary">
+          {(["ads", "products"] as const).map((item) => (
+            <button
+              key={item}
+              onClick={() => setSearchParams(item === "ads" ? {} : { tab: item })}
+              className={cn(
+                "px-3 py-1.5 text-sm rounded-lg",
+                tab === item ? "bg-background shadow-soft font-medium" : "text-muted-foreground",
+              )}
+            >
+              {item === "ads" ? "My ads" : "Older products"}
+            </button>
+          ))}
+        </div>
+        <Button asChild size="sm" className="bg-gradient-primary gap-1.5">
+          <Link to="/post-ad">
+            <Plus className="size-3.5" />
+            Post ad
+          </Link>
+        </Button>
+      </div>
+
+      {tab === "ads" ? <SellerAds /> : <OlderProducts />}
     </SellerShell>
   );
 };

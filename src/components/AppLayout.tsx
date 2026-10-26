@@ -12,6 +12,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     pathname.startsWith("/forgot") ||
     pathname.startsWith("/verify-email") ||
     pathname.startsWith("/call/") ||
+    pathname.startsWith("/post-ad/") ||
     /^\/messages\/.+/.test(pathname);
 
   // Scroll to top on route change

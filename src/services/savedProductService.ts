@@ -1,5 +1,6 @@
 import apiClient from "@/lib/utils/apiClient";
 import { apiBaseUrl } from "@/lib/utils/config";
+import type { ListingPage } from "@/types/listing";
 import {
   GetSavedProductsParams,
   SavedProductPayload,
@@ -37,6 +38,15 @@ export class SavedProductService {
   }
 
   /** GET /saved-products/count  →  { count: number } */
+  /** GET /saved-products/ads  →  the user's saved ads as card data */
+  static async getSavedAds(): Promise<ListingPage> {
+    const response = await apiClient.get(
+      `${apiBaseUrl}/api/v1/saved-products/ads`,
+      { params: { limit: 50 } },
+    );
+    return response.data;
+  }
+
   static async getCount(): Promise<number> {
     const response = await apiClient.get<{ count: number }>(
       `${apiBaseUrl}/api/v1/saved-products/counts`,

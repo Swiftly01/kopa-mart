@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -12,7 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import heroImg from "@/assets/hero.jpg";
 import nyscLogo from "@/assets/kopa_logo.jpeg";
 import useUser from "@/hooks/users/queries/useUser";
-import useGetProductsInfinite from "@/hooks/products/queries/useGetProductsInfinite";
+import useMarketFeed from "@/hooks/listings/custom/useMarketFeed";
 import { useProductFilters } from "@/hooks/products/custom/useproductfilters";
 import { FilterControls } from "@/components/ui/filterControls";
 import { ProductGrid } from "@/components/ui/productGrid";
@@ -46,17 +46,14 @@ const Index = () => {
     queryParams,
   } = useProductFilters();
 
-  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useGetProductsInfinite({
-      limit: ITEMS_PER_PAGE,
-      ...queryParams,
-    });
-
-  const products = useMemo(
-    () => data?.pages.flatMap((p) => p.data) ?? [],
-    [data],
-  );
-  const totalCount = data?.pages[0]?.meta.totalItems ?? 0;
+  const {
+    items: products,
+    totalCount,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useMarketFeed(ITEMS_PER_PAGE, queryParams);
 
   // Infinite scroll sentinel
   const sentinelRef = useRef<HTMLDivElement>(null);

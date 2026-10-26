@@ -278,7 +278,7 @@ const Profile = () => {
                   <div className="flex-1">
                     <p className="text-sm font-medium">Seller Dashboard</p>
                     <p className="text-xs text-muted-foreground">
-                      Manage and add listings
+                      Your ads and older products
                     </p>
                   </div>
                 </Link>
@@ -300,20 +300,6 @@ const Profile = () => {
                   </div>
                 </Link>
 
-                <Link
-                  to="/seller-dashboard/create-listing"
-                  className="flex items-center gap-3 p-4 card-listing"
-                >
-                  <div className="flex items-center justify-center size-10 rounded-xl bg-primary/15 text-primary">
-                    <Plus className="size-5" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Add new listing</p>
-                    <p className="text-xs text-muted-foreground">
-                      Post a product or service
-                    </p>
-                  </div>
-                </Link>
               </>
             );
 

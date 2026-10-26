@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { reviewKeys } from "../reviewKeys";
+import { listingKeys } from "@/hooks/listings/listingKeys";
 import { productKeys } from "@/hooks/products/productKeys";
 import { ReviewService } from "@/services/reviewService";
 import { UpdateReviewPayload } from "@/types/review";
@@ -28,6 +29,8 @@ export default function useUpdateReview() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: productKeys.all });
       queryClient.invalidateQueries({ queryKey: ["products-infinite"] });
+      // ads show their own rating, so refresh them too
+      queryClient.invalidateQueries({ queryKey: listingKeys.all });
       queryClient.invalidateQueries({
         queryKey: reviewKeys.product(variables.productId),
       });

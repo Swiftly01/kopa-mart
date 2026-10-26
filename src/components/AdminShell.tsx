@@ -9,6 +9,7 @@ import {
   Settings as Cog,
   Loader2,
   Bell,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import useUser from "@/hooks/users/queries/useUser";
@@ -39,6 +40,7 @@ export const AdminShell = ({ children }: { children: ReactNode }) => {
     { to: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
     { to: "/admin/users", label: "Users", icon: Users },
     { to: "/admin/listings", label: "Listings", icon: Package },
+    { to: "/admin/ads", label: "Ads", icon: ClipboardCheck },
     { to: "/admin/seller-verification", label: "Verify", icon: ShieldCheck },
     { to: "/admin/categories", label: "Categories", icon: ShieldCheck },
     ...(isAdmin(user)

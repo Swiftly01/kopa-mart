@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { AxiosError } from "axios";
 import { ArrowLeft, Loader2, ShieldAlert, Trash2 } from "lucide-react";
 
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "@/components/ui/starRating";
 import useGetProductBySlug from "@/hooks/products/queries/useGetProductBySlug";
 import useGetProduct from "@/hooks/products/queries/useGetProduct";
+import useGetPublicAd from "@/hooks/listings/queries/useGetPublicAd";
 import useUser from "@/hooks/users/queries/useUser";
 import useGetReviewEligibility from "@/hooks/reviews/queries/useGetReviewEligibility";
 import useCreateReview from "@/hooks/reviews/mutations/useCreateReview";
@@ -23,6 +24,14 @@ const MAX_COMMENT_LENGTH = 2000;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+interface ReviewSubject {
+  id: string;
+  sellerId: string;
+  slug: string;
+  name: string;
+  images?: { cloudinaryUrl: string; isMain: boolean }[];
+}
+
 const WriteReview = () => {
   const { slug: param } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -35,8 +44,30 @@ const WriteReview = () => {
     isId ? param : undefined,
   );
 
-  const product = isId ? productById : productBySlug;
-  const isProductLoading = isId ? isIdLoading : isSlugLoading;
+  // "/ad/:slug/review" reviews an ad; "/listing/:slug/review" reviews a product
+  const { pathname } = useLocation();
+  const isAd = pathname.startsWith("/ad/");
+  const { data: ad, isLoading: isAdLoading } = useGetPublicAd(
+    isAd ? (param ?? "") : "",
+  );
+
+  // both kinds are reduced to the few fields this page needs
+  const product: ReviewSubject | undefined = isAd
+    ? ad && {
+        id: ad.id,
+        sellerId: ad.seller?.id ?? "",
+        slug: ad.slug,
+        name: ad.title,
+        images: ad.images.map((image) => ({
+          cloudinaryUrl: image.url,
+          isMain: image.position === 0,
+        })),
+      }
+    : isId
+      ? productById
+      : productBySlug;
+  const detailPath = isAd ? `/ad/${product?.slug}` : `/listing/${product?.slug}`;
+  const isProductLoading = isAd ? isAdLoading : isId ? isIdLoading : isSlugLoading;
   const { data: user } = useUser();
   const isBuyer = user?.role === "buyer";
 
@@ -88,7 +119,7 @@ const WriteReview = () => {
               title: "Review updated",
               description: "Your changes have been saved.",
             });
-            navigate(`/listing/${product.slug}`);
+            navigate(detailPath);
           },
           onError: (err: AxiosError) => handleAxiosError(err),
         },
@@ -109,7 +140,7 @@ const WriteReview = () => {
             title: "Review submitted",
             description: "Thanks for sharing your experience!",
           });
-          navigate(`/listing/${product.slug}`);
+          navigate(detailPath);
         },
         onError: (err: AxiosError) => handleAxiosError(err),
       },
@@ -130,7 +161,7 @@ const WriteReview = () => {
             title: "Review deleted",
             description: "Your review has been removed.",
           });
-          navigate(`/listing/${product.slug}`);
+          navigate(detailPath);
         },
         onError: (err: AxiosError) => handleAxiosError(err),
       },
@@ -172,7 +203,7 @@ const WriteReview = () => {
           Sign in with a buyer account to rate and review this listing.
         </p>
         <Link
-          to={`/listing/${product.slug}`}
+          to={detailPath}
           className="text-sm font-semibold text-emerald-600 hover:text-emerald-700"
         >
           Back to listing
@@ -196,7 +227,7 @@ const WriteReview = () => {
             "Contact the seller via WhatsApp or a call before leaving a review."}
         </p>
         <Link
-          to={`/listing/${product.slug}`}
+          to={detailPath}
           className="text-sm font-semibold text-emerald-600 hover:text-emerald-700"
         >
           Back to listing

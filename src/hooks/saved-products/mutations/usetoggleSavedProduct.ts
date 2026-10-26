@@ -52,6 +52,7 @@ export function useToggleSavedProduct(productId: string) {
       // Also invalidate the saved list + count (badge on the Saved tab)
       queryClient.invalidateQueries({ queryKey: savedProductKeys.list() });
       queryClient.invalidateQueries({ queryKey: savedProductKeys.count() });
+      queryClient.invalidateQueries({ queryKey: savedProductKeys.ads() });
     },
   });
 }

@@ -19,7 +19,7 @@ export const BottomNav = () => {
 
     switch (user?.sellerOnboarding?.status) {
       case SellerVerificationStatusEnum.APPROVED:
-        return navigate("/seller-dashboard/create-listing");
+        return navigate("/post-ad");
 
       case SellerVerificationStatusEnum.IN_PROGRESS:
         // Resume where they left off
