@@ -278,7 +278,7 @@ const Profile = () => {
                   <div className="flex-1">
                     <p className="text-sm font-medium">Seller Dashboard</p>
                     <p className="text-xs text-muted-foreground">
-                      Your ads and older products
+                      Your ads and old ads
                     </p>
                   </div>
                 </Link>
