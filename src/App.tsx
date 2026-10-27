@@ -12,43 +12,43 @@ import AdminListingDetail from "./pages/admin/AdminListingDetail.tsx";
 import CategoryDetailPage from "./pages/admin/CategoryDetailPage..tsx";
 import CategoryForm from "./pages/admin/CategoryForm.tsx";
 import CategoryListPage from "./pages/admin/CategoryListPage.tsx";
-import AdminDashboard from "./pages/admin/Dashboard.tsx";
-import AdminListingsPage from "./pages/admin/Listings.tsx";
-import AdsReview from "./pages/admin/ads/AdsReview.tsx";
-import AdReviewDetail from "./pages/admin/ads/AdReviewDetail.tsx";
-import AdAdminEdit from "./pages/admin/ads/AdAdminEdit.tsx";
-import AdDetail from "./pages/ads/AdDetail.tsx";
-import SellerGate from "./components/post-ad/SellerGate.tsx";
-import MyAdDetail from "./pages/post-ad/MyAdDetail.tsx";
-import EditAd from "./pages/post-ad/EditAd.tsx";
-import AdminSettings from "./pages/admin/Settings.tsx";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminListingsPage from "./pages/admin/Listings";
+import AdsReview from "./pages/admin/ads/AdsReview";
+import AdReviewDetail from "./pages/admin/ads/AdReviewDetail";
+import AdAdminEdit from "./pages/admin/ads/AdAdminEdit";
+import AdDetail from "./pages/ads/AdDetail";
+import SellerGate from "./components/post-ad/SellerGate";
+import MyAdDetail from "./pages/post-ad/MyAdDetail";
+import EditAd from "./pages/post-ad/EditAd";
+import AdminSettings from "./pages/admin/Settings";
 import UserDetailPage from "./pages/admin/UserDetailPage.tsx";
-import AdminUsers from "./pages/admin/Users.tsx";
-import AdminVerify from "./pages/admin/Verification.tsx";
+import AdminUsers from "./pages/admin/Users";
+import AdminVerify from "./pages/admin/Verification";
 import VerificationDetailPage from "./pages/admin/VerificationDetailPage.tsx";
 import AuthSuccess from "./pages/AuthSucces.tsx";
 import Forgot from "./pages/forgot.tsx";
-import Index from "./pages/Index.tsx";
-import InstallIOS from "./pages/InstallIOS.tsx";
-import ListingDetail from "./pages/ListingDetail.tsx";
-import Listings from "./pages/Listings.tsx";
-import Login from "./pages/Login.tsx";
+import Index from "./pages/Index";
+import InstallIOS from "./pages/InstallIOS";
+import ListingDetail from "./pages/ListingDetail";
+import Listings from "./pages/Listings";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound.tsx";
-import Profile from "./pages/Profile.tsx";
-import Saved from "./pages/Saved.tsx";
-import CreateListing from "./pages/seller-dashboard/CreateListing.tsx";
-import ManageListings from "./pages/seller-dashboard/ManageListings.tsx";
+import Profile from "./pages/Profile";
+import Saved from "./pages/Saved";
+import CreateListing from "./pages/seller-dashboard/CreateListing";
+import ManageListingsGate from "./pages/seller-dashboard/ManageListingsGate";
 import ProductDetailPage from "./pages/seller-dashboard/ProductDetailPage.tsx";
-import OnbApply from "./pages/seller-onboarding/Apply.tsx";
+import OnbApply from "./pages/seller-onboarding/Apply";
 import OnbFaceScan from "./pages/seller-onboarding/FaceScan.tsx";
-import OnbIntro from "./pages/seller-onboarding/Intro.tsx";
-import OnbPending from "./pages/seller-onboarding/Pending.tsx";
-import OnbStoreProfile from "./pages/seller-onboarding/StoreProfile.tsx";
-import SellerProfile from "./pages/SellerProfile.tsx";
-import WriteReview from "./pages/WriteReview.tsx";
-import Signup from "./pages/Signup.tsx";
-import Support from "./pages/Support.tsx";
-import VerifyEmail from "./pages/VerifyEmail.tsx";
+import OnbIntro from "./pages/seller-onboarding/Intro";
+import OnbPending from "./pages/seller-onboarding/Pending";
+import OnbStoreProfile from "./pages/seller-onboarding/StoreProfile";
+import SellerProfile from "./pages/SellerProfile";
+import WriteReview from "./pages/WriteReview";
+import Signup from "./pages/Signup";
+import Support from "./pages/Support";
+import VerifyEmail from "./pages/VerifyEmail";
 import Notification from "./pages/Notification.tsx";
 import AdminNotifications from "./pages/admin/AdminNotifications.tsx";
 import NotificationPushListener from "./components/ui/NotificationPushListener.tsx";
@@ -116,7 +116,7 @@ const App = () => (
                 />
                 <Route
                   path="/seller-dashboard/manage-listings"
-                  element={<ManageListings />}
+                  element={<ManageListingsGate />}
                 />
                 {/* posting moved to the ad form; the old create page now redirects */}
                 <Route

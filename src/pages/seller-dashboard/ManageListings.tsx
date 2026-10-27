@@ -142,8 +142,8 @@ const OlderProducts = () => {
           // queryClient.invalidateQueries({ queryKey: ["seller-products"] });
           refetch();
           appToast({
-            title: "Delete Product",
-            description: "Product removed successfully",
+            title: "Delete ad",
+            description: "Ad removed successfully",
           });
           closeDeleteModal();
         },
@@ -185,7 +185,7 @@ const OlderProducts = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-base font-semibold leading-none">Older products</h2>
+          <h2 className="text-base font-semibold leading-none">Old ads</h2>
           {!isLoading && (
             <p className="mt-1 text-xs text-muted-foreground">
               {totalCount.toLocaleString()}{" "}
@@ -357,7 +357,7 @@ const OlderProducts = () => {
             <Package className="size-7 text-muted-foreground/60" />
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-medium">No older products</p>
+            <p className="text-sm font-medium">No old ads</p>
             <p className="text-xs text-muted-foreground max-w-56">
               Products you uploaded before ads appear here.
             </p>
@@ -469,7 +469,7 @@ const ManageListings = () => {
                 tab === item ? "bg-background shadow-soft font-medium" : "text-muted-foreground",
               )}
             >
-              {item === "ads" ? "My ads" : "Older products"}
+              {item === "ads" ? "My ads" : "Old ads"}
             </button>
           ))}
         </div>

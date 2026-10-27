@@ -11,7 +11,7 @@ import SignInPrompt from "./SignInPrompt";
 export const SellerShell = ({ children }: { children: ReactNode }) => {
   // const user = useCurrentUser();
   const { data: user, isLoading } = useUser();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { data: hasLegacy } = useHasLegacyProducts(user?.role === "seller");
 
   if (isLoading) {
@@ -40,8 +40,8 @@ export const SellerShell = ({ children }: { children: ReactNode }) => {
     ...(hasLegacy
       ? [
           {
-            to: "/seller-dashboard/manage-listings",
-            label: "Old products",
+            to: "/seller-dashboard/manage-listings?tab=products",
+            label: "Old ads",
             icon: LayoutDashboard,
           },
         ]
@@ -54,7 +54,7 @@ export const SellerShell = ({ children }: { children: ReactNode }) => {
       <h1 className="font-bold text-lg mb-3">Seller Dashboard</h1>
       <div className="flex gap-2 p-1 bg-secondary rounded-2xl mb-4">
         {tabs.map((t) => {
-          const active = pathname === t.to;
+          const active = (t.to.includes("?") ? pathname + search : pathname) === t.to;
           return (
             <Link
               key={t.to}
